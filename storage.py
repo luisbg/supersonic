@@ -95,6 +95,11 @@ class Storage():
         self.list (silent=True)
         self.play(self.music_list[track_num])
 
+    def add_file (self, filepath):
+        print "Add file " + filepath
+
+        contents = open(filepath, "r")
+        self.conn.put_object(self.container, filepath, contents)
 
 if __name__ == "__main__":
     parser = OptionParser(usage='''
@@ -124,3 +129,8 @@ Positional arguments:
             s.play_cmd(int(args[1]))
         else:
             print "Play command needs an argument"
+    if command == "add-file":
+        if len(args) > 1:
+            s.add_file(args[1])
+        else:
+            print "Add-file command needs an argument"
