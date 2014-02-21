@@ -5,6 +5,9 @@ from swiftclient import client
 from optparse import OptionParser
 from sys import argv, exit
 from urllib import quote as _quote
+import hmac
+from hashlib import sha1
+from time import time
 
 
 def encode_utf8(value):
@@ -24,15 +27,19 @@ def quote(value, safe='/'):
 
 class Storage():
     def __init__(self):
-        self.url = "http://192.168.1.3:8080"
+        self.music_list = []
+
+        self.url = "http://luisbg.dyndns.org:8080"
         self.authurl = self.url + "/auth/v1.0"
         self.user = "test:tester"
+        self.key = "testing"
         self.container = "music"
+        self.temp_url_key = "b3968d0207b54ece87cccc06515a89d4"
 
         self.conn = client.Connection(
             authurl = self.authurl,
             user = self.user,
-            key = "testing",
+            key = self.key,
             retries = 5,
             auth_version = '1.0')
 
@@ -45,15 +52,23 @@ class Storage():
         if not found:
             exit("There should be a container called '%s'" % self.container)
 
-    def list (self):
-        print "Music list: \n"
+    def list (self, silent=False):
+        if not silent:
+            print "Music list: \n"
         items = self.conn.get_container(self.container)[1]
         if not items:
             print "There is no music"
             return
+
+        n = 0
         for i in items:
-            #print i
-            print i.get('name')
+            self.music_list.append(i.get('name'))
+
+            if not silent:
+                #print i
+                print str(n) + ": " + i.get('name')
+                n += 1
+
 
     def play (self, track):
         try:
@@ -61,23 +76,24 @@ class Storage():
         except:
             print track + " not found"
 
-        print "size: " + head['content-length']
+        # print "size: " + head['content-length']
         if head['content-type'] == "audio/mpeg":
             print "media file confirmed"
 
-        parsed, conn =  self.conn.http_conn
-        path = '%s/%s/%s' % (parsed.path, quote(self.container), \
-                             quote(track))
+        # Get a temporary public url
         method = 'GET'
-        headers = {}
-        headers['X-Auth-Token'] = self.conn.token
-        conn.request(method, path, '', headers)
-        resp = conn.getresponse()
+        duration_in_seconds = 60*60*3
+        expires = int(time() + duration_in_seconds)
+        path = '/v1/AUTH_test/%s/%s' % (self.container, track)
+        hmac_body = '%s\n%s\n%s' % (method, expires, path)
+        sig = hmac.new(self.temp_url_key, hmac_body, sha1).hexdigest()
+        s = '{host}{path}?temp_url_sig={sig}&temp_url_expires={expires}'
+        url = s.format(host=self.url, path=path, sig=sig, expires=expires)
+        print url
 
-        parsed_response = {}
-        client.store_response(resp, parsed_response)
-        # print parsed_response
-        print resp.url
+    def play_cmd (self, track_num):
+        self.list (silent=True)
+        self.play(self.music_list[track_num])
 
 
 if __name__ == "__main__":
@@ -105,6 +121,6 @@ Positional arguments:
         s.list()
     if command == "play":
         if len(args) > 1:
-            s.play(args[1])
+            s.play_cmd(int(args[1]))
         else:
             print "Play command needs an argument"
