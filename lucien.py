@@ -101,6 +101,8 @@ class Lucien(GObject.GObject):
         url = s.format(host=self.url, path=path, sig=sig, expires=expires)
         print url
 
+        return url
+
     def play_cmd (self, track_num):
         self.list (silent=True)
         self.play(self.music_list[track_num])

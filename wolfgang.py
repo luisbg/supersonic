@@ -417,10 +417,11 @@ class Wolfgang():
             pos = self.engine.query_position()
             duration = self.engine.query_duration()
             if not duration == 0:  # GStreamer nonsense, occurring randomly.
-                print "Position is", pos, "and duration is", duration
                 new_slider_pos = pos / float(duration) * 100
-                print "\tUpdate slider position to", new_slider_pos
+                # print "Position is", pos, "and duration is", duration
+                # print "\tUpdate slider position to", new_slider_pos
                 self.time_slider.get_adjustment().props.value = new_slider_pos
+
         return True
 
     def quit(self, unused_window=None, unused_event=None):
@@ -435,7 +436,12 @@ class Wolfgang():
             # The user clicked play without selecting a track, play the 1st
             self.uri = self.queue_store.get_value(self.queue_current_iter, 2)
             self.queue_store.set_value(self.queue_current_iter, 0, "♪")
-        self.engine.play(self.uri)
+
+        temp_url = self.lucien.play(self.uri)
+
+        self.engine.play(temp_url)
+        print temp_url
+
         self.is_playing = True
         self.play_button.props.active = True
         self.time_slider.set_sensitive(True)
