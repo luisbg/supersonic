@@ -9,6 +9,7 @@ import hmac
 from hashlib import sha1
 from time import time
 
+from gi.repository import GObject
 
 def encode_utf8(value):
     if isinstance(value, unicode):
@@ -25,8 +26,18 @@ def quote(value, safe='/'):
     else:
         return value
 
-class Lucien():
+class Lucien(GObject.GObject):
+    '''Lucien class. Encapsulates all the Swift work in
+       simple function per feature for the player'''
+
+    __gsignals__ = {
+        'discovered': (GObject.SIGNAL_RUN_FIRST, GObject.TYPE_NONE,
+                      (GObject.TYPE_STRING, GObject.TYPE_STRING, \
+                       GObject.TYPE_STRING, GObject.TYPE_STRING))
+    }
+
     def __init__(self):
+        GObject.GObject.__init__(self)
         self.music_list = []
 
         self.url = "http://luisbg.dyndns.org:8080"
@@ -61,14 +72,13 @@ class Lucien():
             return
 
         n = 0
-        for i in items:
-            self.music_list.append(i.get('name'))
+        for obj in items:
+            self.discovered(obj)
 
             if not silent:
                 #print i
                 print str(n) + ": " + i.get('name')
                 n += 1
-
 
     def play (self, track):
         try:
@@ -100,6 +110,22 @@ class Lucien():
 
         contents = open(filepath, "r")
         self.conn.put_object(self.container, filepath, contents)
+
+    def discovered (self, obj):
+        name = obj.get('name')
+        self.music_list.append(name)
+        #self.emit ("discovered", track, artist, album, title)
+        self.emit ("discovered", name, "n/a", "n/a", name)
+
+    def search_in_any (self, query):
+        result = []
+        for track in self.music_list:
+            if query.lower() in track[1].lower() or \
+                    query.lower() in track[2].lower() or \
+                    query.lower() in track[3].lower():
+                result.append(track)
+        return result
+
 
 if __name__ == "__main__":
     parser = OptionParser(usage='''
