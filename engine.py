@@ -120,11 +120,11 @@ class Engine (GObject.GObject):
 if __name__ == "__main__":
     import os, optparse
 
-    usage = """engine.py -i [file]"""
+    usage = """engine.py -i [uri]"""
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-i", "--input", action="store", type="string", \
-        dest="input", help="Input video     file", default="")
+        dest="input", help="Input media uri", default="")
     (options, args) = parser.parse_args()
 
     print "Playing: %r" % options.input
