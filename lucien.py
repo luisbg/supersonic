@@ -25,7 +25,7 @@ def quote(value, safe='/'):
     else:
         return value
 
-class Storage():
+class Lucien():
     def __init__(self):
         self.music_list = []
 
@@ -119,18 +119,18 @@ Positional arguments:
             exit('no such command: %s' % args[0])
         exit()
 
-    s = Storage()
+    lcn = Lucien()
 
     command = args[0]
     if command == "list":
-        s.list()
+        lcn.list()
     if command == "play":
         if len(args) > 1:
-            s.play_cmd(int(args[1]))
+            lcn.play_cmd(int(args[1]))
         else:
             print "Play command needs an argument"
     if command == "add-file":
         if len(args) > 1:
-            s.add_file(args[1])
+            lcn.add_file(args[1])
         else:
             print "Add-file command needs an argument"
