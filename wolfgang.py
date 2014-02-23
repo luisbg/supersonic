@@ -81,7 +81,7 @@ class Wolfgang():
         # self.queue_treeview.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
 
         self.library_store = Gtk.TreeStore(str) # Only 1 "column" to contain all
-        self.playlist_store = Gtk.ListStore(str, str, str)  # title, URI, track number
+        self.playlist_store = Gtk.ListStore(str, str, int)  # title, URI, track number
         self.queue_store = Gtk.ListStore(str, str, str)  # cursor, title, URI
         self.queue_current_iter = None  # To keep track of where the cursor was
 
@@ -118,8 +118,8 @@ class Wolfgang():
         # Silly hack to steal the focus from the gtk entry:
         self.library_treeview.grab_focus()
 
-    def _new_media (self, lcn, uri, artist, album, title):
-        self._populate_library (uri, artist, album, title)
+    def _new_media (self, lcn, uri, artist, album, title, track_num):
+        self._populate_library (uri, artist, album, title, track_num)
 
     def _populate_library_from_list (self, new_library):
         self.library_store.clear()
@@ -128,7 +128,7 @@ class Wolfgang():
             self._populate_library (track[0], track[1], track[2], track[3], \
                 track[4])
 
-    def _populate_library(self, uri, artist, album, title):
+    def _populate_library(self, uri, artist, album, title, track_num):
         """
         for track in LIBRARY:
             if artist not already there: add it
@@ -164,8 +164,7 @@ class Wolfgang():
                 self.library[artist][album] = []
                 self.library_store.append(artist_iter, [album])
 
-        # TODO: append should be track title, track uri, track name
-        self.library[artist][album].append([title, uri, uri])
+        self.library[artist][album].append([title, uri, track_num])
 
     """
     UI methods and callbacks
@@ -355,7 +354,7 @@ class Wolfgang():
             artist = self.library_store.get_value(temp_iter, column)
             tracks = self.library[artist][current_value]
         # Don't bother with existing items, scrap the old model and rebuild it
-        self.playlist_store = Gtk.ListStore(str, str, str)
+        self.playlist_store = Gtk.ListStore(str, str, int)
         tracks.sort(key=lambda tup: tup[2])
         for track in tracks:
             self.playlist_store.append(track)

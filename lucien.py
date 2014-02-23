@@ -35,7 +35,8 @@ class Lucien(GObject.GObject):
     __gsignals__ = {
         'discovered': (GObject.SIGNAL_RUN_FIRST, GObject.TYPE_NONE,
                       (GObject.TYPE_STRING, GObject.TYPE_STRING, \
-                       GObject.TYPE_STRING, GObject.TYPE_STRING))
+                       GObject.TYPE_STRING, GObject.TYPE_STRING, \
+                       GObject.TYPE_UINT))
     }
 
     def __init__(self):
@@ -118,6 +119,7 @@ class Lucien(GObject.GObject):
         info = disc.discover_uri (file_uri)
         tags = info.get_tags ()
         artist = album = title = "Unknown"
+        track_num = 0
         tagged, tag = tags.get_string('artist')
         if tagged:
             artist = tag
@@ -146,14 +148,17 @@ class Lucien(GObject.GObject):
 
         head = self.conn.head_object(self.container, obj_name)
         artist = album = title = "Unknown"
+        track_num = 0
         if 'x-object-meta-artist' in head:
             artist = head['x-object-meta-artist']
         if 'x-object-meta-album' in head:
             album = head['x-object-meta-album']
         if 'x-object-meta-title' in head:
             title = head['x-object-meta-title']
+        if 'x-object-meta-track-num' in head:
+            track_num = int(head['x-object-meta-track-num'])
 
-        self.emit ("discovered", obj_name, artist, album, title)
+        self.emit ("discovered", obj_name, artist, album, title, track_num)
 
     def search_in_any (self, query):
         result = []
