@@ -20,6 +20,7 @@ class Wolfgang():
         self.lucien = Lucien()
 
         self.uri = None
+        self.aritst = None
         self.is_playing = False
         self._sliderGrabbed = False
         self.loop = False
@@ -81,8 +82,8 @@ class Wolfgang():
         # self.queue_treeview.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
 
         self.library_store = Gtk.TreeStore(str) # Only 1 "column" to contain all
-        self.playlist_store = Gtk.ListStore(str, str, int)  # title, URI, track number
-        self.queue_store = Gtk.ListStore(str, str, str)  # cursor, title, URI
+        self.playlist_store = Gtk.ListStore(str, str, str, int)  # artist, title, URI, track number
+        self.queue_store = Gtk.ListStore(str, str, str, str)  # cursor, title, URI
         self.queue_current_iter = None  # To keep track of where the cursor was
 
         self.library_treeview.set_model(self.library_store)
@@ -100,7 +101,7 @@ class Wolfgang():
         column = Gtk.TreeViewColumn("Title")
         title = Gtk.CellRendererText()
         column.pack_start(title, True)
-        column.add_attribute(title, "text", 0)
+        column.add_attribute(title, "text", 1)
         self.playlist_treeview.append_column(column)
 
         # Queue: 3 columns in store, 1 shown for cursor, 1 for the track title
@@ -112,7 +113,7 @@ class Wolfgang():
         column = Gtk.TreeViewColumn("Title")
         title = Gtk.CellRendererText()
         column.pack_start(title, True)
-        column.add_attribute(title, "text", 1)
+        column.add_attribute(title, "text", 3)
         self.queue_treeview.append_column(column)
 
         # Silly hack to steal the focus from the gtk entry:
@@ -164,7 +165,7 @@ class Wolfgang():
                 self.library[artist][album] = []
                 self.library_store.append(artist_iter, [album])
 
-        self.library[artist][album].append([title, uri, track_num])
+        self.library[artist][album].append([artist, title, uri, track_num])
 
     """
     UI methods and callbacks
@@ -175,6 +176,7 @@ class Wolfgang():
         prev_iter = self.queue_store.iter_previous(self.queue_current_iter)
         if prev_iter is None:
             return False
+        self.artist = self.queue_store.get_value(prev_iter, 1)
         self.uri = self.queue_store.get_value(prev_iter, 2)
         self.engine.stop()
         self.play()
@@ -201,6 +203,7 @@ class Wolfgang():
         next_iter = self.queue_store.iter_next(self.queue_current_iter)
         if next_iter is None:
             return False
+        self.artist = self.queue_store.get_value(next_iter, 1)
         self.uri = self.queue_store.get_value(next_iter, 2)
         self.engine.stop()
         self.play()
@@ -228,15 +231,16 @@ class Wolfgang():
         internal_queue = []
         current_iter = self.queue_store.get_iter_first()
         while current_iter:
-            uri = self.queue_store.get_value(current_iter, 1)
-            title = self.queue_store.get_value(current_iter, 2)
+            artist = self.queue_store.get_value(current_iter, 1)
+            uri = self.queue_store.get_value(current_iter, 2)
+            title = self.queue_store.get_value(current_iter, 3)
             # The first item is the playback indicator column, not used here,
             # so None
-            internal_queue.append([None, uri, title])
+            internal_queue.append([None, artist, uri, title])
             current_iter = self.queue_store.iter_next(current_iter)
         # Shuffle everything up and then recreate the treeview from it.
         random.shuffle(internal_queue)
-        self.queue_store = Gtk.ListStore(str, str, str)
+        self.queue_store = Gtk.ListStore(str, str, str, str)
         for item in internal_queue:
             self.queue_store.append(item)
         self.queue_treeview.set_model(self.queue_store)
@@ -258,9 +262,10 @@ class Wolfgang():
         column = 0
 
         def _addIterToQueue(current_iter):
-            uri = treemodel.get_value(current_iter, 0)
+            artist = treemodel.get_value(current_iter, 0)
             title = treemodel.get_value(current_iter, 1)
-            self.queue_store.append([None, uri, title])
+            uri = treemodel.get_value(current_iter, 2)
+            self.queue_store.append([None, artist, uri, title])
             # This will be used for the shuffle function. The first item is for
             # the cursor/playback indicator column, but it's not used here: None
             if self.queue_current_iter is None:
@@ -282,7 +287,7 @@ class Wolfgang():
 
     def clearQueue(self, unused_widget=None):
         # C-style "no messing around with loops, just drop the pointer" tactic
-        self.queue_store = Gtk.ListStore(str, str, str)
+        self.queue_store = Gtk.ListStore(str, str, str, str)
         self.queue_treeview.set_model(self.queue_store)
         self.queue_current_iter = None
         # Stop playback, since we're going to insensitize the UI anyway:
@@ -354,7 +359,7 @@ class Wolfgang():
             artist = self.library_store.get_value(temp_iter, column)
             tracks = self.library[artist][current_value]
         # Don't bother with existing items, scrap the old model and rebuild it
-        self.playlist_store = Gtk.ListStore(str, str, int)
+        self.playlist_store = Gtk.ListStore(str, str, str, int)
         tracks.sort(key=lambda tup: tup[2])
         for track in tracks:
             self.playlist_store.append(track)
@@ -377,6 +382,7 @@ class Wolfgang():
         treemodel.set_value(current_iter, 0, "♪")
         self.queue_current_iter = current_iter
         self.engine.stop()
+        self.artist = treemodel.get_value(current_iter, 1)
         self.uri = treemodel.get_value(current_iter, 2)
         self.play()
 
@@ -435,11 +441,11 @@ class Wolfgang():
             # The user clicked play without selecting a track, play the 1st
             self.uri = self.queue_store.get_value(self.queue_current_iter, 2)
             self.queue_store.set_value(self.queue_current_iter, 0, "♪")
+            self.artist = self.queue_store.get_value(self.queue_current_iter, 1)
 
-        temp_url = self.lucien.play(self.uri)
-
+        temp_url = self.lucien.play(self.artist, self.uri)
         self.engine.play(temp_url)
-        print temp_url
+        print "url: " + temp_url + "\n"
 
         self.is_playing = True
         self.play_button.props.active = True
@@ -467,10 +473,11 @@ class Wolfgang():
         next_iter = self.queue_store.iter_next(self.queue_current_iter)
         if next_iter is not None:
             print "Song ended, play the next one"
-            uri = self.queue_store.get_value(next_iter, 2)
-            self.uri = uri
-            temp_url = self.lucien.play(self.uri)
+            self.artist = self.queue_store.get_value(next_iter, 1)
+            self.uri = self.queue_store.get_value(next_iter, 2)
+            temp_url = self.lucien.play(self.artist, self.uri)
             self.engine.play(temp_url)
+
             # remove the ♪ cursor
             self.queue_store.set_value(self.queue_current_iter, 0, "")
             self.queue_store.set_value(next_iter, 0, "♪")
@@ -485,8 +492,9 @@ class Wolfgang():
                 self.play_button.set_active(False)
             else:
                 first_iter = self.queue_store.get_iter_first()
+                self.artist = self.queue_store.get_value(first_iter, 1)
                 self.uri = self.queue_store.get_value(first_iter, 2)
-                temp_url = self.lucien.play(self.uri)
+                temp_url = self.lucien.play(self.artist, self.uri)
                 self.engine.play(temp_url)
                 # remove the ♪ cursor
                 self.queue_store.set_value(self.queue_current_iter, 0, "")

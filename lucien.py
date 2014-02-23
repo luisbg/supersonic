@@ -49,7 +49,6 @@ class Lucien(GObject.GObject):
         self.authurl = self.url + "/auth/v1.0"
         self.user = "test:tester"
         self.key = "testing"
-        self.container = "music"
         self.temp_url_key = "b3968d0207b54ece87cccc06515a89d4"
 
         self.conn = client.Connection(
@@ -61,32 +60,25 @@ class Lucien(GObject.GObject):
 
         print "Connection successful to the account: ", self.conn.user
 
-        found = False
-        for cts in self.conn.get_account()[1]:
-            if cts['name'] == self.container:
-                found = True
-        if not found:
-            exit("There should be a container called '%s'" % self.container)
-
     def list (self, silent=False):
         if not silent:
             print "Music list: \n"
-        items = self.conn.get_container(self.container)[1]
-        if not items:
-            print "There is no music"
-            return
 
         n = 0
-        for obj in items:
-            self.discovered(obj)
+        for container in self.conn.get_account()[1]:
+            cont_name = container['name']
+            items = self.conn.get_container(cont_name)[1]
+            for obj in items:
+                self.discovered(cont_name, obj)
 
-            if not silent:
-                print str(n) + ": " + obj.get('name')
-                n += 1
+                if not silent:
+                    print str(n) + ": " + cont_name + " - "  + obj.get('name')
+                    n += 1
 
-    def play (self, track):
+    def play (self, artist, track):
+        print "play: %s - %s" % (artist, track)
         try:
-            head = self.conn.head_object(self.container, track)
+            head = self.conn.head_object(artist, track)
         except:
             print track + " not found"
 
@@ -98,7 +90,7 @@ class Lucien(GObject.GObject):
         method = 'GET'
         duration_in_seconds = 60*60*3
         expires = int(time() + duration_in_seconds)
-        path = '/v1/AUTH_test/%s/%s' % (self.container, track)
+        path = '/v1/AUTH_test/%s/%s' % (artist, track)
         hmac_body = '%s\n%s\n%s' % (method, expires, path)
         sig = hmac.new(self.temp_url_key, hmac_body, sha1).hexdigest()
         s = '{host}{path}?temp_url_sig={sig}&temp_url_expires={expires}'
@@ -140,8 +132,10 @@ class Lucien(GObject.GObject):
         headers.append(["X-Object-Meta-Title", title])
         headers.append(["X-Object-Meta-Track-Num", str(track_num)])
 
-        self.conn.put_object(self.container, filepath, contents, \
-                             headers=headers)
+        obj_name = "%s/%s" % (album, title)
+        if not self.container_exists (artist):
+            self.conn.put_container(artist)
+        self.conn.put_object(artist, obj_name, contents, headers=headers)
 
     def add_folder (self, folderpath):
         print "Adding folder: " + folderpath
@@ -157,6 +151,14 @@ class Lucien(GObject.GObject):
         for filepath in music_files:
             self.add_file (filepath)
 
+    def container_exists (self, container):
+        found = False
+        for c in self.conn.get_account()[1]:
+            if c['name'] == container:
+                found = True
+                break
+
+        return found
 
     def scan_folder_for_ext (self, folder, ext):
         scan = []
@@ -168,11 +170,11 @@ class Lucien(GObject.GObject):
 
         return scan
 
-    def discovered (self, obj):
+    def discovered (self, container, obj):
         obj_name = obj.get('name')
         self.music_list.append(obj_name)
 
-        head = self.conn.head_object(self.container, obj_name)
+        head = self.conn.head_object(container, obj_name)
         artist = album = title = "Unknown"
         track_num = 0
         if 'x-object-meta-artist' in head:
