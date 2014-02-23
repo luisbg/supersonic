@@ -77,7 +77,7 @@ class Lucien(GObject.GObject):
 
             if not silent:
                 #print i
-                print str(n) + ": " + i.get('name')
+                print str(n) + ": " + obj.get('name')
                 n += 1
 
     def play (self, track):
@@ -99,24 +99,22 @@ class Lucien(GObject.GObject):
         sig = hmac.new(self.temp_url_key, hmac_body, sha1).hexdigest()
         s = '{host}{path}?temp_url_sig={sig}&temp_url_expires={expires}'
         url = s.format(host=self.url, path=path, sig=sig, expires=expires)
-        print url
 
         return url
 
     def play_cmd (self, track_num):
         self.list (silent=True)
-        self.play(self.music_list[track_num])
+        print self.play(self.music_list[track_num])
 
     def add_file (self, filepath):
         print "Add file " + filepath
 
         contents = open(filepath, "r")
-        self.conn.put_object(self.container, filepath, contents)
+        #self.conn.put_object(self.container, filepath, contents)
 
     def discovered (self, obj):
         name = obj.get('name')
         self.music_list.append(name)
-        #self.emit ("discovered", track, artist, album, title)
         self.emit ("discovered", name, "n/a", "n/a", name)
 
     def search_in_any (self, query):
