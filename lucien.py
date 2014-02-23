@@ -10,6 +10,8 @@ from hashlib import sha1
 from time import time
 
 from gi.repository import GObject
+from gi.repository import Gst, GstPbutils
+
 
 def encode_utf8(value):
     if isinstance(value, unicode):
@@ -38,6 +40,7 @@ class Lucien(GObject.GObject):
 
     def __init__(self):
         GObject.GObject.__init__(self)
+        Gst.init(None)  # Move somewhere more particular
         self.music_list = []
 
         self.url = "http://luisbg.dyndns.org:8080"
@@ -76,7 +79,6 @@ class Lucien(GObject.GObject):
             self.discovered(obj)
 
             if not silent:
-                #print i
                 print str(n) + ": " + obj.get('name')
                 n += 1
 
@@ -110,12 +112,48 @@ class Lucien(GObject.GObject):
         print "Add file " + filepath
 
         contents = open(filepath, "r")
-        #self.conn.put_object(self.container, filepath, contents)
+
+        disc = GstPbutils.Discoverer.new (50000000000)
+        file_uri= Gst.filename_to_uri (filepath)
+        info = disc.discover_uri (file_uri)
+        tags = info.get_tags ()
+        artist = album = title = "Unknown"
+        tagged, tag = tags.get_string('artist')
+        if tagged:
+            artist = tag
+        tagged, tag = tags.get_string('album')
+        if tagged:
+            album = tag
+        tagged, tag = tags.get_string('title')
+        if tagged:
+            title = tag
+        tagged, tag = tags.get_uint('track-number')
+        if tagged:
+            track_num = tag
+
+        headers = []
+        headers.append(["X-Object-Meta-Artist", artist])
+        headers.append(["X-Object-Meta-Album", album])
+        headers.append(["X-Object-Meta-Title", title])
+        headers.append(["X-Object-Meta-Track-Num", str(track_num)])
+
+        self.conn.put_object(self.container, filepath, contents, \
+                             headers=headers)
 
     def discovered (self, obj):
-        name = obj.get('name')
-        self.music_list.append(name)
-        self.emit ("discovered", name, "n/a", "n/a", name)
+        obj_name = obj.get('name')
+        self.music_list.append(obj_name)
+
+        head = self.conn.head_object(self.container, obj_name)
+        artist = album = title = "Unknown"
+        if 'x-object-meta-artist' in head:
+            artist = head['x-object-meta-artist']
+        if 'x-object-meta-album' in head:
+            album = head['x-object-meta-album']
+        if 'x-object-meta-title' in head:
+            title = head['x-object-meta-title']
+
+        self.emit ("discovered", obj_name, artist, album, title)
 
     def search_in_any (self, query):
         result = []
