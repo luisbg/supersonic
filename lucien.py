@@ -8,6 +8,7 @@ from urllib import quote as _quote
 import hmac
 from hashlib import sha1
 from time import time
+import os
 
 from gi.repository import GObject
 from gi.repository import Gst, GstPbutils
@@ -110,7 +111,7 @@ class Lucien(GObject.GObject):
         print self.play(self.music_list[track_num])
 
     def add_file (self, filepath):
-        print "Add file " + filepath
+        print "Add file: " + filepath
 
         contents = open(filepath, "r")
 
@@ -141,6 +142,31 @@ class Lucien(GObject.GObject):
 
         self.conn.put_object(self.container, filepath, contents, \
                              headers=headers)
+
+    def add_folder (self, folderpath):
+        print "Adding folder: " + folderpath
+
+        music_files = []
+        for media in self.scan_folder_for_ext (folderpath, "mp3"):
+            music_files.append(media)
+        for media in self.scan_folder_for_ext (folderpath, "ogg"):
+            music_files.append(media)
+        for media in self.scan_folder_for_ext (folderpath, "oga"):
+            music_files.append(media)
+
+        for filepath in music_files:
+            self.add_file (filepath)
+
+
+    def scan_folder_for_ext (self, folder, ext):
+        scan = []
+        for path, dirs, files in os.walk (folder):
+            for file in files:
+                if file.split('.')[-1] in ext:
+                    location = os.path.join(path, file)
+                    scan.append(location)
+
+        return scan
 
     def discovered (self, obj):
         obj_name = obj.get('name')
@@ -203,3 +229,8 @@ Positional arguments:
             lcn.add_file(args[1])
         else:
             print "Add-file command needs an argument"
+    if command == "add-folder":
+        if len(args) > 1:
+            lcn.add_folder(args[1])
+        else:
+            print "Add-folder command needs an argument"
