@@ -469,7 +469,8 @@ class Wolfgang():
             print "Song ended, play the next one"
             uri = self.queue_store.get_value(next_iter, 2)
             self.uri = uri
-            self.engine.play(self.uri)
+            temp_url = self.lucien.play(self.uri)
+            self.engine.play(temp_url)
             # remove the ♪ cursor
             self.queue_store.set_value(self.queue_current_iter, 0, "")
             self.queue_store.set_value(next_iter, 0, "♪")
@@ -485,7 +486,8 @@ class Wolfgang():
             else:
                 first_iter = self.queue_store.get_iter_first()
                 self.uri = self.queue_store.get_value(first_iter, 2)
-                self.engine.play(self.uri)
+                temp_url = self.lucien.play(self.uri)
+                self.engine.play(temp_url)
                 # remove the ♪ cursor
                 self.queue_store.set_value(self.queue_current_iter, 0, "")
                 self.queue_store.set_value(first_iter, 0, "♪")
