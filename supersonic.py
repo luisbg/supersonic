@@ -13,7 +13,7 @@ from os import path
 from sys import exit
 import random
 
-class Wolfgang():
+class SuperSonic():
 
     def __init__(self):
         self.engine = Engine()
@@ -27,7 +27,7 @@ class Wolfgang():
         self.library = {}
 
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(path.join(path.curdir, "wolfgang.ui"))
+        self.builder.add_from_file(path.join(path.curdir, "supersonic.ui"))
         self.builder.connect_signals(self)
 
         # Sup dawg, I heard you like black,
@@ -469,7 +469,7 @@ class Wolfgang():
         self.queue_store.set_value(error_iter, 0, "⚠")
 
     def _onAboutToFinish (self, arg):
-        print "wolfgang: about to finish"
+        print "Supersonic: about to finish"
         next_iter = self.queue_store.iter_next(self.queue_current_iter)
         if next_iter is not None:
             print "Song ended, play the next one"
@@ -505,5 +505,5 @@ class Wolfgang():
                     self.next_button.set_sensitive(True)
 
 
-wolfgang = Wolfgang()
+ss = SuperSonic()
 Gtk.main()
