@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Wolfgang is a very simple audio player demo using media indexing
-# Copyright 2012 Jean-François Fortin Tam, Luis de Bethencourt
+# SuperSonic is a very simple audio player demo using media indexing
+# Copyright 2014 Jean-François Fortin Tam, Luis de Bethencourt
 
 from engine import Engine
 from lucien import Lucien

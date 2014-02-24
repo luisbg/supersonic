@@ -136,6 +136,7 @@ class Lucien(GObject.GObject):
         if not self.container_exists (artist):
             self.conn.put_container(artist)
         self.conn.put_object(artist, obj_name, contents, headers=headers)
+        print "added: %s :: %s \n" % (artist, obj_name)
 
     def add_folder (self, folderpath):
         print "Adding folder: " + folderpath
