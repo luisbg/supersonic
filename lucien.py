@@ -162,13 +162,13 @@ class Lucien(GObject.GObject):
         track_num = 0
         tagged, tag = tags.get_string('artist')
         if tagged:
-            artist = tag
+            artist = unicode(tag, "UTF-8")
         tagged, tag = tags.get_string('album')
         if tagged:
-            album = tag
+            album = unicode(tag, "UTF-8")
         tagged, tag = tags.get_string('title')
         if tagged:
-            title = tag
+            title = unicode(tag, "UTF-8")
         tagged, tag = tags.get_uint('track-number')
         if tagged:
             track_num = tag
