@@ -43,7 +43,7 @@ class Lucien(GObject.GObject):
                        GObject.TYPE_UINT))
     }
 
-    def __init__(self, command):
+    def __init__(self, command=None):
         GObject.GObject.__init__(self)
         Gst.init(None)  # Move somewhere more particular
         self.music_list = []
@@ -122,19 +122,20 @@ class Lucien(GObject.GObject):
     def collect_db(self, silent=True):
         self.sqlcur.execute('SELECT * from Music')
         music = self.sqlcur.fetchall()
-        if not silent:
-            for t in music:
-                print "%s : %s / %s / (%s) %s" % (t[0], t[1], t[2], t[4], t[3])
-        return music
+        for t in music:
+            self.discovered(t)
 
-    def play(self, artist, album, track):
-        print "play: %s - %s" % (artist, track)
+            if not silent:
+                print "%s : %s / %s / (%s) %s" % (t[0], t[1], t[2], t[4], t[3])
+
+    def play(self, artist, obj_name):
+        print "play: %s - %s" % (artist, obj_name)
 
         # Get a temporary public url
         method = 'GET'
         duration_in_seconds = 60*60*3
         expires = int(time() + duration_in_seconds)
-        path = '/v1/AUTH_test/%s/%s/%s' % (artist, album, track)
+        path = '/v1/AUTH_test/%s/%s' % (artist, obj_name)
         hmac_body = '%s\n%s\n%s' % (method, expires, path)
         sig = hmac.new(self.temp_url_key, hmac_body, sha1).hexdigest()
         s = '{host}{path}?temp_url_sig={sig}&temp_url_expires={expires}'
@@ -145,7 +146,8 @@ class Lucien(GObject.GObject):
     def play_cmd(self, track_num):
         self.sqlcur.execute('SELECT * from Music WHERE Id = %s' % track_num)
         track = self.sqlcur.fetchall()[0]
-        print self.play(track[1], track[2], track[3])
+        obj_name = "%s/%s" % (track[2], track[3])
+        print self.play(track[1], obj_name)
 
     def add_file(self, filepath, alone=True):
         print "Adding file: " + filepath
@@ -233,25 +235,19 @@ class Lucien(GObject.GObject):
 
         return scan
 
-    def discovered(self, container, obj):
-        obj_name = obj.get('name')
-        self.music_list.append(obj_name)
+    def discovered(self, track):
+        obj_name = "%s/%s" % (track[2], track[3])
+        artist = track[1]
+        album = track[2]
+        title = track[3]
+        track_num = track[4]
 
-        head = self.conn.head_object(container, obj_name)
-        artist = album = title = "Unknown"
-        track_num = 0
-        if 'x-object-meta-artist' in head:
-            artist = head['x-object-meta-artist']
-        if 'x-object-meta-album' in head:
-            album = head['x-object-meta-album']
-        if 'x-object-meta-title' in head:
-            title = head['x-object-meta-title']
-        if 'x-object-meta-track-num' in head:
-            track_num = int(head['x-object-meta-track-num'])
+        self.music_list.append(obj_name)
 
         self.emit("discovered", obj_name, artist, album, title, track_num)
 
     def search_in_any(self, query):
+        # TODO: switch to using db
         result = []
         for track in self.music_list:
             if query.lower() in track[1].lower() or \
@@ -281,7 +277,7 @@ Positional arguments:
         exit()
 
     command = args[0]
-    lcn = Lucien(command)
+    lcn = Lucien(command=command)
 
     if command == "list":
         lcn.collect_db(silent=False)

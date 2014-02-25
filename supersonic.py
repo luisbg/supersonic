@@ -67,7 +67,7 @@ class SuperSonic():
                     break
             foo.close()
 
-        self.lucien.list(silent=True)
+        self.lucien.collect_db(silent=True)
 
         GObject.timeout_add(500, self._updateSliderPosition)
 
@@ -164,8 +164,8 @@ class SuperSonic():
                 column = 0
                 artist_iter = self.library_store.get_iter_first()
                 while (artist !=
-                       self.library_store.get_value(artist_iter, column)) and
-                (artist is not None):
+                       self.library_store.get_value(artist_iter, column)) \
+                        and (artist is not None):
                     artist_iter = self.library_store.iter_next(artist_iter)
 
                 self.library[artist][album] = []
@@ -453,7 +453,6 @@ class SuperSonic():
             self.queue_store.set_value(self.queue_current_iter, 0, "♪")
             self.artist = self.queue_store.get_value(self.queue_current_iter,
                                                      1)
-
         temp_url = self.lucien.play(self.artist, self.uri)
         self.engine.play(temp_url)
         print "url: " + temp_url + "\n"
