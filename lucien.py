@@ -97,27 +97,40 @@ class Lucien(GObject.GObject):
                             "Artist TEXT, Album TEXT, Title TEXT, " +
                             "Track INT, Uri TEXT)")
         self.sqlconn.commit()
+
+        self.populate_db()
+
         db_file = open(self.dbo, "r")
         self.conn.put_object(self.dbc, self.dbo, db_file)
         db_file.close()
 
-    def populate_db(self, folder):
-        # TODO: support populate_db
+    def populate_db(self, silent=False):
         if not silent:
             print "Music list: \n"
+            n = 0
 
-        n = 0
         for container in self.conn.get_account()[1]:
             cont_name = container['name']
             if cont_name != self.dbc:
                 items = self.conn.get_container(cont_name)[1]
                 for obj in items:
-                    self.discovered(cont_name, obj)
+                    head = self.conn.head_object(cont_name, obj['name'])
+                    artist = unicode(head['x-object-meta-artist'], "UTF-8")
+                    album = unicode(head['x-object-meta-album'], "UTF-8")
+                    title = unicode(head['x-object-meta-title'], "UTF-8")
+                    track_num = int(head['x-object-meta-track-num'])
+                    file_uri = "%s/%s" % (album, title)
+
+                    self.sqlcur.execute("INSERT INTO Music VALUES(NULL, " +
+                                        "?, ?, ?, ?, ?)",
+                                        (artist, album, title, track_num,
+                                         file_uri))
 
                     if not silent:
                         print str(n) + ": " + cont_name + " - " + \
                             obj.get('name')
                         n += 1
+                self.sqlconn.commit()
 
     def collect_db(self, silent=True):
         self.sqlcur.execute('SELECT * from Music')
@@ -262,8 +275,6 @@ class Lucien(GObject.GObject):
         for t in self.sqlcur.fetchall():
             result.append(t)
 
-        for t in result:
-            print t
         return result
 
 
