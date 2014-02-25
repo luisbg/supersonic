@@ -9,6 +9,7 @@ import hmac
 from hashlib import sha1
 from time import time
 import os
+import sqlite3
 
 from gi.repository import GObject
 from gi.repository import Gst, GstPbutils
@@ -40,7 +41,7 @@ class Lucien(GObject.GObject):
                        GObject.TYPE_UINT))
     }
 
-    def __init__(self):
+    def __init__(self, command):
         GObject.GObject.__init__(self)
         Gst.init(None)  # Move somewhere more particular
         self.music_list = []
@@ -50,6 +51,8 @@ class Lucien(GObject.GObject):
         self.user = "test:tester"
         self.key = "testing"
         self.temp_url_key = "b3968d0207b54ece87cccc06515a89d4"
+        self.dbc = "Index"      # database container
+        self.dbo = "music.db"   # database object
 
         self.conn = client.Connection(
             authurl = self.authurl,
@@ -57,40 +60,78 @@ class Lucien(GObject.GObject):
             key = self.key,
             retries = 5,
             auth_version = '1.0')
-
         print "Connection successful to the account: ", self.conn.user
 
-    def list (self, silent=False):
+        if command != "generate-new-db":
+            found = False
+            for cts in self.conn.get_account()[1]:
+                if cts['name'] == self.dbc:
+                    found = True
+            if not found:
+                exit("There should be a container called '%s'" % self.dbc)
+            try:
+                head = self.conn.head_object(self.dbc, self.dbo)
+            except:
+                print "Database not found"
+
+            head, contents = self.conn.get_object (self.dbc, self.dbo)
+            db = open(self.dbo, "w")
+            db.write(contents)
+            db.close()
+
+        self.sqlconn = sqlite3.connect(self.dbo)
+        with self.sqlconn:
+            self.sqlcur = self.sqlconn.cursor()
+            self.sqlcur.execute('SELECT SQLITE_VERSION()')
+
+            data = self.sqlcur.fetchone()
+            print "SQLite version: %s" % data
+
+    def generate_db (self):
+        print "Generating database"
+        self.sqlcur.execute("DROP TABLE IF EXISTS Music")
+        self.sqlcur.execute("CREATE TABLE Music" + \
+                            "(Id INTEGER PRIMARY KEY AUTOINCREMENT, " + \
+                            "Artist TEXT, Album TEXT, Title TEXT, " + \
+                            "Track INT, Uri TEXT)")
+        self.sqlconn.commit()
+        db_file = open(self.dbo, "r")
+        self.conn.put_object(self.dbc, self.dbo, db_file)
+        db_file.close()
+
+    def populate_db (self, folder):
+        # TODO: support populate_db
         if not silent:
             print "Music list: \n"
 
         n = 0
         for container in self.conn.get_account()[1]:
             cont_name = container['name']
-            items = self.conn.get_container(cont_name)[1]
-            for obj in items:
-                self.discovered(cont_name, obj)
+            if cont_name != self.dbc:
+                items = self.conn.get_container(cont_name)[1]
+                for obj in items:
+                    self.discovered(cont_name, obj)
 
-                if not silent:
-                    print str(n) + ": " + cont_name + " - "  + obj.get('name')
-                    n += 1
+                    if not silent:
+                        print str(n) + ": " + cont_name + " - "  + obj.get('name')
+                        n += 1
 
-    def play (self, artist, track):
+    def collect_db (self, silent=True):
+        self.sqlcur.execute ('SELECT * from Music')
+        music = self.sqlcur.fetchall()
+        if not silent:
+            for t in music:
+                print "%s : %s / %s / (%s) %s" % (t[0], t[1], t[2], t[4], t[3])
+        return music
+
+    def play (self, artist, album, track):
         print "play: %s - %s" % (artist, track)
-        try:
-            head = self.conn.head_object(artist, track)
-        except:
-            print track + " not found"
-
-        # print "size: " + head['content-length']
-        if head['content-type'] == "audio/mpeg":
-            print "media file confirmed"
 
         # Get a temporary public url
         method = 'GET'
         duration_in_seconds = 60*60*3
         expires = int(time() + duration_in_seconds)
-        path = '/v1/AUTH_test/%s/%s' % (artist, track)
+        path = '/v1/AUTH_test/%s/%s/%s' % (artist, album, track)
         hmac_body = '%s\n%s\n%s' % (method, expires, path)
         sig = hmac.new(self.temp_url_key, hmac_body, sha1).hexdigest()
         s = '{host}{path}?temp_url_sig={sig}&temp_url_expires={expires}'
@@ -99,11 +140,12 @@ class Lucien(GObject.GObject):
         return url
 
     def play_cmd (self, track_num):
-        self.list (silent=True)
-        print self.play(self.music_list[track_num])
+        self.sqlcur.execute ('SELECT * from Music WHERE Id = %s' % track_num)
+        track = self.sqlcur.fetchall()[0]
+        print self.play(track[1], track[2], track[3])
 
-    def add_file (self, filepath):
-        print "Add file: " + filepath
+    def add_file (self, filepath, alone=True):
+        print "Adding file: " + filepath
 
         contents = open(filepath, "r")
 
@@ -136,7 +178,19 @@ class Lucien(GObject.GObject):
         if not self.container_exists (artist):
             self.conn.put_container(artist)
         self.conn.put_object(artist, obj_name, contents, headers=headers)
-        print "added: %s :: %s \n" % (artist, obj_name)
+        contents.close()
+
+        file_uri = "%s/%s" % (artist, title)
+        self.sqlcur.execute ("INSERT INTO Music VALUES(NULL, " + \
+                             "?, ?, ?, ?, ?)", \
+                             (artist, album, title, track_num, file_uri))
+        if alone:
+            self.sqlconn.commit()
+            db_file = open(self.dbo, "r")
+            self.conn.put_object(self.dbc, self.dbo, db_file)
+            db_file.close()
+
+        print "Added"
 
     def add_folder (self, folderpath):
         print "Adding folder: " + folderpath
@@ -150,7 +204,12 @@ class Lucien(GObject.GObject):
             music_files.append(media)
 
         for filepath in music_files:
-            self.add_file (filepath)
+            self.add_file (filepath, alone=False)
+
+        self.sqlconn.commit()
+        db_file = open(self.dbo, "r")
+        self.conn.put_object(self.dbc, self.dbo, db_file)
+        db_file.close()
 
     def container_exists (self, container):
         found = False
@@ -205,23 +264,24 @@ Positional arguments:
   <subcommand>
     add-file
     add-folder
+    generate-new-db
     list
     play
 '''.strip('\n') % globals())
     (options, args) = parser.parse_args(argv[1:])
 
-    commands = ('add-file', 'add-folder', 'list', 'play')
+    commands = ('add-file', 'add-folder', 'generate-new-db', 'list', 'play')
     if not args or args[0] not in commands:
         parser.print_usage()
         if args:
             exit('no such command: %s' % args[0])
         exit()
 
-    lcn = Lucien()
-
     command = args[0]
+    lcn = Lucien(command)
+
     if command == "list":
-        lcn.list()
+        lcn.collect_db(silent=False)
     if command == "play":
         if len(args) > 1:
             lcn.play_cmd(int(args[1]))
@@ -237,3 +297,5 @@ Positional arguments:
             lcn.add_folder(args[1])
         else:
             print "Add-folder command needs an argument"
+    if command == "generate-new-db":
+        lcn.generate_db()
