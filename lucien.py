@@ -185,7 +185,7 @@ class Lucien(GObject.GObject):
         self.conn.put_object(artist, obj_name, contents, headers=headers)
         contents.close()
 
-        file_uri = "%s/%s" % (artist, title)
+        file_uri = "%s/%s" % (album, title)
         self.sqlcur.execute("INSERT INTO Music VALUES(NULL, " +
                             "?, ?, ?, ?, ?)",
                             (artist, album, title, track_num, file_uri))
@@ -247,13 +247,23 @@ class Lucien(GObject.GObject):
         self.emit("discovered", obj_name, artist, album, title, track_num)
 
     def search_in_any(self, query):
-        # TODO: switch to using db
+        query = "%" + query + "%"
         result = []
-        for track in self.music_list:
-            if query.lower() in track[1].lower() or \
-                    query.lower() in track[2].lower() or \
-                    query.lower() in track[3].lower():
-                result.append(track)
+        self.sqlcur.execute('SELECT * from Music WHERE Artist LIKE ?',
+                            (query,))
+        for t in self.sqlcur.fetchall():
+            result.append(t)
+
+        self.sqlcur.execute('SELECT * from Music WHERE Album LIKE ?', (query,))
+        for t in self.sqlcur.fetchall():
+            result.append(t)
+
+        self.sqlcur.execute('SELECT * from Music WHERE Title LIKE ?', (query,))
+        for t in self.sqlcur.fetchall():
+            result.append(t)
+
+        for t in result:
+            print t
         return result
 
 

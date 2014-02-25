@@ -132,7 +132,7 @@ class SuperSonic():
         self.library_store.clear()
         self.library = {}
         for track in new_library:
-            self._populate_library(track[0], track[1], track[2], track[3],
+            self._populate_library(track[5], track[1], track[2], track[3],
                                    track[4])
 
     def _populate_library(self, uri, artist, album, title, track_num):
@@ -142,16 +142,6 @@ class SuperSonic():
             if album not already there: add it as a child of the artist
             add the track
         """
-        # Avoid adding tracks when searching,
-        # unless they would be a search result anyway
-        search_text = \
-            self.builder.get_object("search_entry").get_text().lower()
-        if not search_text == "":
-            if search_text not in artist.lower() and \
-                    search_text not in album.lower() and \
-                    search_text not in title.lower():
-                return
-
         # A list of tracks (and URIs) in a dic of albums in a dic of artists:
         if artist not in self.library:
             self.library[artist] = {}
