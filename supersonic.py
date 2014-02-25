@@ -13,14 +13,14 @@ from os import path
 from sys import exit
 import random
 
-class SuperSonic():
 
+class SuperSonic():
     def __init__(self):
         self.engine = Engine()
         self.lucien = Lucien()
 
         self.uri = None
-        self.aritst = None
+        self.artist = None
         self.is_playing = False
         self._sliderGrabbed = False
         self.loop = False
@@ -78,13 +78,19 @@ class SuperSonic():
         self.library_treeview = self.builder.get_object("library_treeview")
         self.playlist_treeview = self.builder.get_object("playlist_treeview")
         self.queue_treeview = self.builder.get_object("queue_treeview")
-        # If we enable this, we'll get in trouble in the removeFromQueue method:
-        # self.queue_treeview.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
+        # If we enable this, we'll get in trouble in the
+        # removeFromQueue method:
+        # self.queue_treeview.get_selection().
+        # set_mode(Gtk.SelectionMode.MULTIPLE)
 
-        self.library_store = Gtk.TreeStore(str) # Only 1 "column" to contain all
-        self.playlist_store = Gtk.ListStore(str, str, str, int)  # artist, title, URI, track number
-        self.queue_store = Gtk.ListStore(str, str, str, str)  # cursor, title, URI
-        self.queue_current_iter = None  # To keep track of where the cursor was
+        # Only 1 "column" to contain all
+        self.library_store = Gtk.TreeStore(str)
+        # artist, title, URI, track number
+        self.playlist_store = Gtk.ListStore(str, str, str, int)
+        # cursor, title, URI
+        self.queue_store = Gtk.ListStore(str, str, str, str)
+        # To keep track of where the cursor was
+        self.queue_current_iter = None
 
         self.library_treeview.set_model(self.library_store)
         self.playlist_treeview.set_model(self.playlist_store)
@@ -119,15 +125,15 @@ class SuperSonic():
         # Silly hack to steal the focus from the gtk entry:
         self.library_treeview.grab_focus()
 
-    def _new_media (self, lcn, uri, artist, album, title, track_num):
-        self._populate_library (uri, artist, album, title, track_num)
+    def _new_media(self, lcn, uri, artist, album, title, track_num):
+        self._populate_library(uri, artist, album, title, track_num)
 
-    def _populate_library_from_list (self, new_library):
+    def _populate_library_from_list(self, new_library):
         self.library_store.clear()
         self.library = {}
         for track in new_library:
-            self._populate_library (track[0], track[1], track[2], track[3], \
-                track[4])
+            self._populate_library(track[0], track[1], track[2], track[3],
+                                   track[4])
 
     def _populate_library(self, uri, artist, album, title, track_num):
         """
@@ -157,10 +163,10 @@ class SuperSonic():
             if album not in self.library[artist]:
                 column = 0
                 artist_iter = self.library_store.get_iter_first()
-                while (artist != \
-                      self.library_store.get_value (artist_iter, column)) and \
-                      (artist != None):
-                    artist_iter = self.library_store.iter_next (artist_iter)
+                while (artist !=
+                       self.library_store.get_value(artist_iter, column)) and
+                (artist is not None):
+                    artist_iter = self.library_store.iter_next(artist_iter)
 
                 self.library[artist][album] = []
                 self.library_store.append(artist_iter, [album])
@@ -267,7 +273,7 @@ class SuperSonic():
             uri = treemodel.get_value(current_iter, 2)
             self.queue_store.append([None, artist, uri, title])
             # This will be used for the shuffle function. The first item is for
-            # the cursor/playback indicator column, but it's not used here: None
+            # the cursor/playback indicator column, but it's not used here
             if self.queue_current_iter is None:
                 self.queue_current_iter = self.queue_store.get_iter_first()
 
@@ -282,7 +288,8 @@ class SuperSonic():
 
         self.main_toolbar.set_sensitive(True)
         # Enable "Next" when appending after the currently playing track
-        if self.is_playing and self.queue_store.iter_next(self.queue_current_iter):
+        if self.is_playing and \
+           self.queue_store.iter_next(self.queue_current_iter):
             self.next_button.set_sensitive(True)
 
     def clearQueue(self, unused_widget=None):
@@ -329,9 +336,10 @@ class SuperSonic():
 
     def _searchEntryChanged(self, widget):
         result = self.lucien.search_in_any(widget.get_text())
-        self._populate_library_from_list (result)
+        self._populate_library_from_list(result)
 
-    def _searchEntryIconRelease(self, widget, unused_icon_position, unused_arg):
+    def _searchEntryIconRelease(self, widget, unused_icon_position,
+                                unused_arg):
         widget.set_text("")
 
     def _libraryRowSelected(self, treeview):
@@ -365,13 +373,15 @@ class SuperSonic():
             self.playlist_store.append(track)
         self.playlist_treeview.set_model(self.playlist_store)
 
-    def _playlistRowActivated(self, unused_treeview, unused_position, unused_column):
+    def _playlistRowActivated(self, unused_treeview, unused_position,
+                              unused_column):
         """
         Allow adding to the queue by double-clicking/activating a playlist item
         """
         self.addToQueue()
 
-    def _queueTreeviewRowActivated(self, treeview, unused_position, unused_column):
+    def _queueTreeviewRowActivated(self, treeview, unused_position,
+                                   unused_column):
         """
         When a row is activated in the queue treeview, start playback.
         """
@@ -402,9 +412,9 @@ class SuperSonic():
         This is also where seeks are triggered on click.
         """
         if Gtk.get_major_version() >= 3 and Gtk.get_minor_version() < 6:
-            # Override the event button to use a middle-click when left-clicking
-            # the slider, allowing it to wark directly to the desired position.
-            # This behavior has been fixed in GTK 3.6.
+            # Override the event button to use a middle-click when
+            # left-clicking the slider, allowing it to wark directly to the
+            # desired position. This behavior has been fixed in GTK 3.6.
             event.button = 2
         if event.type is Gdk.EventType.BUTTON_PRESS:
             self._sliderGrabbed = True
@@ -441,7 +451,8 @@ class SuperSonic():
             # The user clicked play without selecting a track, play the 1st
             self.uri = self.queue_store.get_value(self.queue_current_iter, 2)
             self.queue_store.set_value(self.queue_current_iter, 0, "♪")
-            self.artist = self.queue_store.get_value(self.queue_current_iter, 1)
+            self.artist = self.queue_store.get_value(self.queue_current_iter,
+                                                     1)
 
         temp_url = self.lucien.play(self.artist, self.uri)
         self.engine.play(temp_url)
@@ -468,7 +479,7 @@ class SuperSonic():
         self.next()
         self.queue_store.set_value(error_iter, 0, "⚠")
 
-    def _onAboutToFinish (self, arg):
+    def _onAboutToFinish(self, arg):
         print "Supersonic: about to finish"
         next_iter = self.queue_store.iter_next(self.queue_current_iter)
         if next_iter is not None:

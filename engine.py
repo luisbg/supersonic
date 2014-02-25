@@ -24,20 +24,21 @@
 from gi.repository import Gst
 from gi.repository import GObject
 
+
 class Engine (GObject.GObject):
     '''GStreamer engine class. Encapsulates all the core gstreamer work in
        simple function per feature for the HMI'''
 
     __gsignals__ = {
         'about_to_finish': (GObject.SIGNAL_RUN_FIRST, None,
-                      ()),
+                            ()),
         'error': (GObject.SIGNAL_RUN_FIRST, None,
-                      ())
+                  ())
     }
 
-    def __init__ (self):
+    def __init__(self):
         GObject.GObject.__init__(self)
-        Gst.init (None)
+        Gst.init(None)
         print "Running with GStreamer", str(Gst.version()[0]) + "." + \
             str(Gst.version()[1]) + "." + str(Gst.version()[2])
         self.IS_GST010 = Gst.version()[0] == 0
@@ -59,38 +60,38 @@ class Engine (GObject.GObject):
         self.bus.connect("message", self._onBusMessage)
         self.player.connect("about-to-finish",  self._about_to_finish)
 
-    def play (self, uri):
-        if self.is_playing == False:
-            self.player.set_state (Gst.State.NULL)
+    def play(self, uri):
+        if not self.is_playing:
+            self.player.set_state(Gst.State.NULL)
         self.player.props.uri = uri
-        self.player.set_state (Gst.State.PLAYING)
+        self.player.set_state(Gst.State.PLAYING)
         self.is_playing = True
 
-    def pause (self):
-        self.player.set_state (Gst.State.PAUSED)
+    def pause(self):
+        self.player.set_state(Gst.State.PAUSED)
 
-    def stop (self):
-        self.player.set_state (Gst.State.READY)
+    def stop(self):
+        self.player.set_state(Gst.State.READY)
         self.is_playing = False
 
-    def seek (self, target_position):
-        self.player.seek_simple (Gst.Format.TIME, \
-            Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT, \
-            target_position)
+    def seek(self, target_position):
+        self.player.seek_simple(Gst.Format.TIME,
+                                Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT,
+                                target_position)
 
-    def _seek (self):
-        if not self._seeking and self._current_position != self._target_position:
+    def _seek(self):
+        if not self._seeking and self._current_position \
+           != self._target_position:
             self._seeking = True
             print "Seek to", self._target_position
             self.seek(self._target_position)
             self._current_position = self._target_position
 
-    def query_duration (self):
-        return self.player.query_duration (Gst.Format.TIME)[1]
+    def query_duration(self):
+        return self.player.query_duration(Gst.Format.TIME)[1]
 
-    def query_position (self):
-        return self.player.query_position (Gst.Format.TIME)[1]
-
+    def query_position(self):
+        return self.player.query_position(Gst.Format.TIME)[1]
 
     """
     GStreamer callbacks
@@ -110,25 +111,26 @@ class Engine (GObject.GObject):
             print "Got message of type ", message.type
             print "Got message of src ", message.src
             print "Got message of error ", message.parse_error()
-            self.emit ("error")
+            self.emit("error")
 
-    def _about_to_finish (self, playbin):
+    def _about_to_finish(self, playbin):
         print "engine: about to finish"
-        self.emit ("about_to_finish");
+        self.emit("about_to_finish")
 
 
 if __name__ == "__main__":
-    import os, optparse
+    import os
+    import optparse
 
     usage = """engine.py -i [uri]"""
 
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-i", "--input", action="store", type="string", \
-        dest="input", help="Input media uri", default="")
+    parser.add_option("-i", "--input", action="store", type="string",
+                      dest="input", help="Input media uri", default="")
     (options, args) = parser.parse_args()
 
     print "Playing: %r" % options.input
 
     engine = Engine()
-    engine.play (options.input)
+    engine.play(options.input)
     GObject.MainLoop().run()
