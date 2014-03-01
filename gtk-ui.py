@@ -31,7 +31,7 @@ class SuperSonic():
         self.library = {}
 
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(path.join(path.curdir, "supersonic.ui"))
+        self.builder.add_from_file(path.join(path.curdir, "gtk.ui"))
         self.builder.connect_signals(self)
 
         # Sup dawg, I heard you like black,
