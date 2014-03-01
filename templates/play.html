@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+  <ul class=entries>
+    <h2><a href="/">{{ track.artist }}</a> -
+      <a href="/album/{{ track.artist }}/{{ track.album }}">{{ track.album }}</a> -
+      {{ track.title }}</h2>
+    <p>
+    <center>
+      <audio src="{{ url }}" controls autoplay>
+          <p>Your browser does not support the audio element.</p>
+      </audio>
+    </center>
+  </ul>
+{% endblock %}

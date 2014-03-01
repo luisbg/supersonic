@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %}
+  <ul class=entries>
+  {% for entry in entries %}
+    <li><h2>{{ entry.artist }}</h2>
+      <a href="/album/{{ entry.artist}}/{{ entry.album }}">{{ entry.album|safe }}</a>
+  {% else %}
+    <li><em>Empty: No music</em>
+  {% endfor %}
+  </ul>
+{% endblock %}
