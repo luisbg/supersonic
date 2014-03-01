@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from swiftclient import client
+import config
 
 from optparse import OptionParser
 from sys import argv, exit
@@ -46,15 +47,16 @@ class Lucien(GObject.GObject):
     def __init__(self, command=None):
         GObject.GObject.__init__(self)
         Gst.init(None)  # Move somewhere more particular
+        config.read_config_file()
         self.music_list = []
 
-        self.url = "http://luisbg.dyndns.org:8080"
-        self.authurl = self.url + "/auth/v1.0"
-        self.user = "test:tester"
-        self.key = "testing"
-        self.temp_url_key = "b3968d0207b54ece87cccc06515a89d4"
-        self.dbc = "Index"      # database container
-        self.dbo = "music.db"   # database object
+        self.url = config.prefs['url']
+        self.authurl = config.prefs['url'] + config.prefs['authurl']
+        self.user = config.prefs['user']
+        self.key = config.prefs['key']
+        self.temp_url_key = config.prefs['temp_url_key']
+        self.dbc = config.prefs['dbc']      # database container
+        self.dbo = config.prefs['dbo']   # database object
 
         self.conn = client.Connection(
             authurl=self.authurl,

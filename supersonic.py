@@ -5,13 +5,16 @@
 
 from engine import Engine
 from lucien import Lucien
+import constants
 
 from gi.repository import Gtk, Gdk
 from gi.repository import Gst
 from gi.repository import GObject
 from os import path
-from sys import exit
+
 import random
+import os
+import sys
 
 
 class SuperSonic():
@@ -56,16 +59,6 @@ class SuperSonic():
         self.engine.connect("about_to_finish", self._onAboutToFinish)
         self.engine.connect("error", self._onError)
         self.lucien.connect("discovered", self._new_media)
-
-        # Slight hack to get the user's "Music" XDG directory:
-        with open(path.expanduser("~/.config/user-dirs.dirs"), "r") as foo:
-            lines = foo.readlines()
-            for line in lines:
-                if "XDG_MUSIC_DIR" in line:
-                    home = path.expanduser("~")
-                    music_folder = line.split('"')[1].replace("$HOME", home)
-                    break
-            foo.close()
 
         self.lucien.collect_db(silent=True)
 
@@ -431,7 +424,7 @@ class SuperSonic():
 
     def quit(self, unused_window=None, unused_event=None):
         Gtk.main_quit
-        exit(0)
+        sys.exit(0)
 
     """
     Public playback methods (not callbacks)
@@ -505,5 +498,14 @@ class SuperSonic():
                     self.next_button.set_sensitive(True)
 
 
-ss = SuperSonic()
-Gtk.main()
+def run():
+    """Run supersonic"""
+    if not os.path.exists(constants.CONFIG_DIR):
+        os.makedirs(constants.CONFIG_DIR, 0700)
+
+    ss = SuperSonic()
+    Gtk.main()
+
+
+if __name__ == '__main__':
+    run()
