@@ -6,6 +6,7 @@
 from engine import Engine
 from lucien import Lucien
 import constants
+import config
 
 from gi.repository import Gtk, Gdk
 from gi.repository import Gst
@@ -502,6 +503,13 @@ def run():
     """Run supersonic"""
     if not os.path.exists(constants.CONFIG_DIR):
         os.makedirs(constants.CONFIG_DIR, 0700)
+
+    if not os.path.isfile(config._config_path):
+        exec_path = os.path.abspath(sys.argv[0])
+        base_dir = os.path.dirname(exec_path)
+        sample_cfg_path = os.path.join(base_dir, "sample_config")
+        if os.path.isfile(sample_cfg_path):
+            config.write_config_file(sample_cfg_path)
 
     ss = SuperSonic()
     Gtk.main()

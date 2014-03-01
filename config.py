@@ -2,6 +2,7 @@
 
 import os
 import ConfigParser
+from shutil import copyfile
 
 import constants
 
@@ -38,9 +39,6 @@ def read_config_file():
         prefs['dbo'] = config.get('Swift', 'dbo')
 
 
-# def write_preferences_file():
-#     """Write preference data to disk."""
-#     config = open(_config_path, 'wb')
-#     cPickle.dump(constants.VERSION, config, cPickle.HIGHEST_PROTOCOL)
-#     cPickle.dump(prefs, config, cPickle.HIGHEST_PROTOCOL)
-#     config.close()
+def write_config_file(source_path):
+    """Write config to disk."""
+    copyfile(source_path, _config_path)

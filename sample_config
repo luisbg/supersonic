@@ -1,0 +1,8 @@
+[Swift]
+url = http://localhost:8080
+authurl =  /auth/v1.0
+user = user
+key = password
+temp_url_key = b3968d0207b54ece87cccc06515a89d4
+dbc = Index
+dbo = music.db
