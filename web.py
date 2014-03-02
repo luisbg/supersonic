@@ -57,7 +57,11 @@ def show_music():
                      'FROM Music ORDER BY Artist')
     entries = cur.fetchall()
 
-    return render_template('show_music.html', entries=entries)
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist = cur.fetchall()
+
+    return render_template('show_music.html', entries=entries,
+                           playlist=playlist)
 
 
 @app.route('/album/<artist>/<album>')
@@ -71,8 +75,11 @@ def show_album(artist="", album=""):
                      (artist, album))
     entries = cur.fetchall()
 
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist = cur.fetchall()
+
     return render_template('show_album.html', entries=entries, artist=artist,
-                           album=album)
+                           album=album, playlist=playlist)
 
 
 @app.route('/play/<idn>')
@@ -86,7 +93,52 @@ def play(idn=0):
     track = cur.fetchall()[0]
     url = app.lucien.play(track[1], track[5])
 
-    return render_template('play.html', track=track, url=url)
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist = cur.fetchall()
+
+    return render_template('play.html', track=track, url=url,
+                           playlist=playlist)
+
+
+@app.route('/add/<idn>')
+def add(idn=0):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    db = get_db()
+    cur = db.execute('SELECT * FROM Music WHERE Id = ?', (idn,))
+    track = cur.fetchall()[0]
+    artist = track[1]
+    album = track[2]
+    title = track[3]
+    db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (idn, artist,
+                                                              title))
+    db.commit()
+    db.close()
+
+    flash('New entry was successfully posted')
+    return redirect('/album/%s/%s' % (artist, album))
+
+
+@app.route('/playlist')
+def playlist():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    db = get_db()
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist = cur.fetchall()
+
+    return render_template('playlist.html', playlist=playlist)
+
+
+@app.route('/remove/<idn>')
+def remove(idn=0):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    db = get_db()
+    db.execute('DELETE FROM Playlist WHERE Id = ?', (idn,))
+    db.commit()
+
+    return redirect('/playlist')
 
 
 @app.route('/login', methods=['GET', 'POST'])

@@ -3,7 +3,9 @@
   <ul class=entries>
     <h2>{{ artist }} - {{ album }}</h2>
   {% for entry in entries %}
-      <li><a href="/play/{{ entry.id }}">{{ entry.title|safe }}</a>
+    <li>[<a href="/play/{{ entry.id }}">Play</a> /
+        <a href="/add/{{ entry.id }}">Add</a>] {{ entry.track }} -
+        {{ entry.title|safe }}
   {% else %}
     <li><em>Empty: No music</em>
   {% endfor %}

@@ -94,10 +94,15 @@ class Lucien(GObject.GObject):
     def generate_db(self):
         print "Generating database"
         self.sqlcur.execute("DROP TABLE IF EXISTS Music")
+        self.sqlcur.execute("DROP TABLE IF EXISTS Playlist")
         self.sqlcur.execute("CREATE TABLE Music" +
                             "(Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                             "Artist TEXT, Album TEXT, Title TEXT, " +
                             "Track INT, Uri TEXT)")
+        self.sqlcur.execute("CREATE TABLE Playlist" +
+                            "(Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "Track INT, Artist TEXT, Title TEXT, " +
+                            "FOREIGN KEY (Track) REFERENCES Music (Id))")
         self.sqlconn.commit()
 
         self.populate_db()

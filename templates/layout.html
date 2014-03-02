@@ -15,4 +15,17 @@
     <div class=flash>{{ message }}</div>
   {% endfor %}
   {% block body %}{% endblock %}
+
+  <hr><br>
+
+  <ul class=entries>
+    <h2><a href="/playlist">Playlist</a></h2>
+  {% for item in playlist %}
+      <li>[<a href="/play/{{ item.track }}">Play</a> /
+        <a href="/remove/{{ item.id }}">Remove</a>]
+        {{ item.artist }}: {{ item.title }}
+  {% else %}
+    <li><em>Empty playlist</em>
+  {% endfor %}
+  </ul>
 </div>
