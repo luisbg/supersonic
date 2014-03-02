@@ -27,7 +27,7 @@ app.config.update(dict(
     DEBUG=True,
     SECRET_KEY='sup3r secr3t dev3lopment k3y',
     USERNAME='luisbg',
-    PASSWORD='not_2_be_used_y3t!'
+    PASSWORD='le_password'
 ))
 # app.config.from_envvar('SUPERSONIC_SETTINGS', silent=True)
 
@@ -50,6 +50,8 @@ def get_db():
 
 @app.route('/')
 def show_music():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     db = get_db()
     cur = db.execute('SELECT DISTINCT Artist, Album ' +
                      'FROM Music ORDER BY Artist')
@@ -60,6 +62,8 @@ def show_music():
 
 @app.route('/album/<artist>/<album>')
 def show_album(artist="", album=""):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     db = get_db()
     cur = db.execute('SELECT * FROM Music ' +
                      'WHERE Artist = ? AND Album = ?' +
@@ -73,6 +77,8 @@ def show_album(artist="", album=""):
 
 @app.route('/play/<idn>')
 def play(idn=0):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     db = get_db()
     cur = db.execute('SELECT * FROM Music ' +
                      'WHERE Id = ?',
@@ -94,7 +100,7 @@ def login():
         else:
             session['logged_in'] = True
             flash('You were logged in')
-            return redirect(url_for('show_entries'))
+            return redirect(url_for('show_music'))
     return render_template('login.html', error=error)
 
 
@@ -102,7 +108,7 @@ def login():
 def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
-    return redirect(url_for('show_entries'))
+    return redirect(url_for('show_music'))
 
 
 @app.teardown_appcontext
