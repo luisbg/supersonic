@@ -51,7 +51,7 @@ def get_db():
 
 
 @app.route('/')
-def show_music():
+def music():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     db = get_db()
@@ -62,7 +62,7 @@ def show_music():
     cur = db.execute('SELECT * FROM Playlist')
     playlist = cur.fetchall()
 
-    return render_template('show_music.html', entries=entries,
+    return render_template('index.html', entries=entries,
                            playlist=playlist)
 
 
@@ -121,17 +121,6 @@ def add(idn=0):
     return redirect('/album/%s/%s' % (artist, album))
 
 
-@app.route('/playlist')
-def playlist():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    db = get_db()
-    cur = db.execute('SELECT * FROM Playlist')
-    playlist = cur.fetchall()
-
-    return render_template('playlist.html', playlist=playlist)
-
-
 @app.route('/remove/<idn>')
 def remove(idn=0):
     if not session.get('logged_in'):
@@ -140,7 +129,7 @@ def remove(idn=0):
     db.execute('DELETE FROM Playlist WHERE Id = ?', (idn,))
     db.commit()
 
-    return redirect('/playlist')
+    return redirect('/')
 
 
 @app.route('/_next')

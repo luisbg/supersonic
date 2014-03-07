@@ -1,20 +1,20 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="left-margin">
-  <h2><a href="/">{{ track.artist }}</a> -
-    <a href="/album/{{ track.artist }}/{{ track.album }}">{{ track.album }}</a> -
-    {{ track.title }}</h2>
-  <p>
-    <center>
-      <audio id="player" controls="controls">
-        Time: <span id="current-time"></span>
-        <source type="audio/mp3" src="{{ url }}" />
-        <p>Your browser does not support the audio element.</p>
-      </audio>
+  <!-- {% for message in get_flashed_messages() %}
+  <div class=flash>{{ message }}</div>
+  {% endfor %} -->
 
-      <p><a href="#" id="next">next</a></p>
-      <span id=result>?</span>
-    </center>
+  <ul class=entries>
+    <h2>Library</h2>
+    <hr>
+    {% for entry in entries %}
+    <li><h2>{{ entry.artist }}</h2>
+      <a href="/album/{{ entry.artist}}/{{ entry.album }}">{{ entry.album|safe }}</a>
+      {% else %}
+    <li><em>Empty: No music</em>
+      {% endfor %}
+  </ul>
 </div>
 
 <div class=right-margin>
@@ -45,3 +45,14 @@
   </ul>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
