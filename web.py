@@ -7,7 +7,7 @@ import sqlite3
 import os
 
 from flask import Flask, request, session, g, redirect, url_for, abort, \
-    render_template, flash
+    render_template, flash, jsonify
 
 from lucien import Lucien
 
@@ -16,6 +16,8 @@ class SuperSonic(Flask):
     def __init__(self, import_name):
         Flask.__init__(self, import_name)
         self.lucien = Lucien()
+        self.active = 0
+
 
 # Create app
 app = SuperSonic(__name__)
@@ -139,6 +141,57 @@ def remove(idn=0):
     db.commit()
 
     return redirect('/playlist')
+
+
+@app.route('/_next')
+def next():
+    db = get_db()
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist = cur.fetchall()
+
+    if len(playlist) == 0:
+        return jsonify(result=None)
+
+    if app.active < (len(playlist) - 1):
+        app.active += 1
+
+    return jsonify(result=None)
+
+@app.route('/_prev')
+def prev():
+    db = get_db()
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist = cur.fetchall()
+
+    if len(playlist) == 0:
+        return jsonify(result=None)
+
+    if app.active > 0:
+        app.active -= 1
+
+    return jsonify(result=None)
+
+
+@app.route('/_get_active')
+def get_active():
+    db = get_db()
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist = cur.fetchall()
+    if len(playlist) == 0:
+        return jsonify(result=())
+
+    cur = db.execute('SELECT * FROM Music WHERE Id = ?',
+                     (playlist[app.active][1],))
+    track = cur.fetchall()[0]
+
+    artist = track[1]
+    album = track[2]
+    title = track[3]
+
+    url = app.lucien.play(track[1], track[5])
+
+    res = (artist, album, title, url)
+    return jsonify(result=res)
 
 
 @app.route('/login', methods=['GET', 'POST'])
