@@ -54,7 +54,7 @@ function get_active() {
               function(data) {
                   player.setSrc(data.result[3]);
                   play();
-                  $("#result").text(data.result[1] + " - " + data.result[2]);
+                  $("#result").text(data.result[0] + " - " + data.result[2]);
               });
     return false;
 }
