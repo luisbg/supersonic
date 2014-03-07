@@ -40,8 +40,13 @@ $(document).ready(function () {
 });
 
 function EOS() {
-    player.play();
-    // alert('End of stream');
+    // play next track in the playlist
+    $.getJSON('/_next', { }, function (data) {
+        if (data.result) {
+            get_active();
+            play();
+        }
+    });
 }
 
 function get_active() {
