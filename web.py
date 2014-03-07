@@ -149,13 +149,15 @@ def next():
     cur = db.execute('SELECT * FROM Playlist')
     playlist = cur.fetchall()
 
+    change = False
     if len(playlist) == 0:
-        return jsonify(result=None)
+        return jsonify(result=change)
 
     if app.active < (len(playlist) - 1):
         app.active += 1
+        change = True
 
-    return jsonify(result=None)
+    return jsonify(result=change)
 
 @app.route('/_prev')
 def prev():
@@ -163,13 +165,15 @@ def prev():
     cur = db.execute('SELECT * FROM Playlist')
     playlist = cur.fetchall()
 
+    change = False
     if len(playlist) == 0:
-        return jsonify(result=None)
+        return jsonify(result=change)
 
     if app.active > 0:
         app.active -= 1
+        change = True
 
-    return jsonify(result=None)
+    return jsonify(result=change)
 
 
 @app.route('/_get_active')

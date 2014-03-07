@@ -17,16 +17,24 @@ $(document).ready(function () {
     });
 
     $('a#next').bind('click', function() {
-        $.getJSON('/_next', { }, function (data) {});
-        get_active();
-        play();
+        $.getJSON('/_next', { }, function (data) {
+            if (data.result) {
+                get_active();
+                play();
+            }
+        });
+
         return false;
     });
 
     $('a#prev').bind('click', function() {
-        $.getJSON('/_prev', { }, function (data) {});
-        get_active();
-        play();
+        $.getJSON('/_prev', { }, function (data) {
+            if (data.result) {
+                get_active();
+                play();
+            }
+        });
+
         return false;
     });
 });
