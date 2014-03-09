@@ -20,7 +20,7 @@
           {% for track, trk_id in tracks.iteritems() %}
           {% if trk_id[1][0] == alb_id[0] %}
               <tr data-tt-id="{{ trk_id[0] }}" data-tt-parent-id="{{ alb_id[0] }}">
-                <td><a href="<{{ trk_id[2] }}>" id="add">{{ track }}</a></td>
+                <td><a href="#{{ trk_id[2] }}" id="add">{{ track }}</a></td>
               </tr>
     {% endif %} {% endfor %} {% endif %} {% endfor %} {% endfor %}
 

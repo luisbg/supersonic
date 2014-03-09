@@ -145,8 +145,6 @@ def play(idn=0):
 
 @app.route('/_add/<idn>')
 def add(idn=0):
-    idn = idn[1:-1]
-
     db = get_db()
     cur = db.execute('SELECT * FROM Music WHERE Id = ?', (idn,))
     track = cur.fetchall()[0]
