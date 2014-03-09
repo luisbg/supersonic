@@ -54,16 +54,42 @@ def get_db():
 def music():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
+
+    # TODO: Optimize
     db = get_db()
+    cur = db.execute('SELECT DISTINCT Artist ' +
+                      'FROM Music ORDER BY Artist')
+    artist_db = cur.fetchall()
+
     cur = db.execute('SELECT DISTINCT Artist, Album ' +
                      'FROM Music ORDER BY Artist')
-    entries = cur.fetchall()
+    albums_db = cur.fetchall()
+
+    cur = db.execute('SELECT * FROM Music ORDER BY Artist')
+    tracks_db = cur.fetchall()
+
+    artists = {}
+    albums = {}
+    tracks = {}
+    n = 0
+    for art in artist_db:
+        artists[art['artist']] = n
+        n += 1
+
+    for alb in albums_db:
+         albums[alb['album']] = (n, artists[alb['artist']])
+         n += 1
+
+    for trk in tracks_db:
+        tracks[trk['title']] = (n, albums[trk['album']], trk['Id'])
+        print (n, albums[trk['album']], trk['Id'])
+        n += 1
 
     cur = db.execute('SELECT * FROM Playlist')
     playlist = cur.fetchall()
 
-    return render_template('index.html', entries=entries,
-                           playlist=playlist)
+    return render_template('index.html', artists=artists, albums=albums,
+                           tracks=tracks, playlist=playlist)
 
 
 @app.route('/album/<artist>/<album>')

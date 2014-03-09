@@ -16,6 +16,8 @@ $(document).ready(function () {
         }
     });
 
+    $("#music_library").treetable({ expandable: true });
+
     $('a#next').bind('click', function() {
         $.getJSON('/_next', { }, function (data) {
             if (data.result) {

@@ -8,12 +8,23 @@
   <ul class=entries>
     <h2>Library</h2>
     <hr>
-    {% for entry in entries %}
-    <li><h2>{{ entry.artist }}</h2>
-      <a href="/album/{{ entry.artist}}/{{ entry.album }}">{{ entry.album|safe }}</a>
-      {% else %}
-    <li><em>Empty: No music</em>
-      {% endfor %}
+    <table id="music_library">
+    {% for artist, art_id in artists.iteritems() %}
+      <tr data-tt-id="{{ art_id }}">
+        <td>{{ artist }}</td>
+      </tr>
+      {% for album, alb_id in albums.iteritems() %} {% if alb_id[1] == art_id %}
+          <tr data-tt-id="{{ alb_id[0] }}" data-tt-parent-id="{{ alb_id[1] }}">
+            <td>{{ album }}</td>
+          </tr>
+          {% for track, trk_id in tracks.iteritems() %}
+          {% if trk_id[1][0] == alb_id[0] %}
+              <tr data-tt-id="{{ trk_id[0] }}" data-tt-parent-id="{{ alb_id[0] }}">
+                <td><a href="/add/{{ trk_id[2] }}">{{ track }}</a></td>
+              </tr>
+    {% endif %} {% endfor %} {% endif %} {% endfor %} {% endfor %}
+
+    </table>
   </ul>
 </div>
 
