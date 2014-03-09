@@ -20,7 +20,7 @@
           {% for track, trk_id in tracks.iteritems() %}
           {% if trk_id[1][0] == alb_id[0] %}
               <tr data-tt-id="{{ trk_id[0] }}" data-tt-parent-id="{{ alb_id[0] }}">
-                <td><a href="/add/{{ trk_id[2] }}">{{ track }}</a></td>
+                <td><a href="<{{ trk_id[2] }}>" id="add">{{ track }}</a></td>
               </tr>
     {% endif %} {% endfor %} {% endif %} {% endfor %} {% endfor %}
 
@@ -32,7 +32,7 @@
     <div id="track"></div>
     <p>
       <center>
-        <span id=result></span> <!-- track information -->
+        <span id="track_info"></span> <!-- track information -->
         <audio id="player" controls="controls">
           Time: <span id="current-time"></span>
           <source type="audio/mp3" src="" />
@@ -46,6 +46,7 @@
   <h2><a href="/playlist">Playlist</a></h2>
   <hr>
   <ul class=entries>
+    <span id="playlist">
     {% for item in playlist %}
     <li>[<a href="/play/{{ item.track }}">Play</a> /
       <a href="/remove/{{ item.id }}">Remove</a>]
@@ -53,6 +54,7 @@
       {% else %}
     <li><em>Empty playlist</em>
       {% endfor %}
+    </span>
   </ul>
 </div>
 {% endblock %}

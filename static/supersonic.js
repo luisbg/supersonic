@@ -39,6 +39,15 @@ $(document).ready(function () {
 
         return false;
     });
+
+    $('a#add').bind('click', function(idn) {
+        var idn = $(this).attr("href");
+        $.getJSON('/_add/' + idn, { }, function (data) {
+            update_playlist();
+        });
+
+        return false;
+    });
 });
 
 function EOS() {
@@ -56,7 +65,7 @@ function get_active() {
               function(data) {
                   player.setSrc(data.result[3]);
                   play();
-                  $("#result").text(data.result[0] + " - " + data.result[2]);
+                  $("#track_info").text(data.result[0] + " - " + data.result[2]);
               });
     return false;
 }
@@ -64,4 +73,12 @@ function get_active() {
 function play() {
     player.load();
     player.play();
+}
+
+function update_playlist() {
+    $.getJSON('/_get_playlist', { },
+              function(data) {
+                  $("#playlist").text("");
+                  $("#playlist").append(data.result);
+              });
 }

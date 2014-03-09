@@ -82,7 +82,6 @@ def music():
 
     for trk in tracks_db:
         tracks[trk['title']] = (n, albums[trk['album']], trk['Id'])
-        print (n, albums[trk['album']], trk['Id'])
         n += 1
 
     cur = db.execute('SELECT * FROM Playlist')
@@ -90,6 +89,23 @@ def music():
 
     return render_template('index.html', artists=artists, albums=albums,
                            tracks=tracks, playlist=playlist)
+
+
+@app.route('/_get_playlist')
+def playlist():
+    db = get_db()
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist = cur.fetchall()
+
+    mu = ""
+
+    for t in playlist:
+        mu  += '<li>[<a href="/play/' + str(t['track']) + '">Play</a> / ' + \
+               '<a href="/remove/' + str(t['id']) + '">Remove</a>] ' + \
+               t['artist'] + ': ' + t['title']
+    print mu
+
+    return jsonify(result=mu)
 
 
 @app.route('/album/<artist>/<album>')
@@ -128,10 +144,10 @@ def play(idn=0):
                            playlist=playlist)
 
 
-@app.route('/add/<idn>')
+@app.route('/_add/<idn>')
 def add(idn=0):
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
+    idn = idn[1:-1]
+
     db = get_db()
     cur = db.execute('SELECT * FROM Music WHERE Id = ?', (idn,))
     track = cur.fetchall()[0]
@@ -143,8 +159,7 @@ def add(idn=0):
     db.commit()
     db.close()
 
-    flash('New entry was successfully posted')
-    return redirect('/album/%s/%s' % (artist, album))
+    return jsonify(result="success")
 
 
 @app.route('/remove/<idn>')
