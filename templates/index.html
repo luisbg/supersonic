@@ -49,7 +49,7 @@
     <span id="playlist">
     {% for item in playlist %}
     <li>[<a href="/play/{{ item.track }}">Play</a> /
-      <a href="/remove/{{ item.id }}">Remove</a>]
+      <a href="#{{ item.id }}" id="remove">Remove</a>]
       {{ item.artist }}: {{ item.title }}
       {% else %}
     <li><em>Empty playlist</em>
@@ -58,14 +58,3 @@
   </ul>
 </div>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-

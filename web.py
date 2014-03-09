@@ -101,9 +101,8 @@ def playlist():
 
     for t in playlist:
         mu  += '<li>[<a href="/play/' + str(t['track']) + '">Play</a> / ' + \
-               '<a href="/remove/' + str(t['id']) + '">Remove</a>] ' + \
+               '<a href="#' + str(t['id']) + '" id="remove">Remove</a>] ' + \
                t['artist'] + ': ' + t['title']
-    print mu
 
     return jsonify(result=mu)
 
@@ -162,15 +161,13 @@ def add(idn=0):
     return jsonify(result="success")
 
 
-@app.route('/remove/<idn>')
+@app.route('/_remove/<idn>')
 def remove(idn=0):
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
     db = get_db()
     db.execute('DELETE FROM Playlist WHERE Id = ?', (idn,))
     db.commit()
 
-    return redirect('/')
+    return jsonify(result="success")
 
 
 @app.route('/_next')

@@ -50,6 +50,15 @@ $(document).ready(function () {
     });
 });
 
+$(document).on('click', 'a#remove', function() {
+    var idn = $(this).attr("href").slice(1);
+    $.getJSON('/_remove/' + idn, { }, function (data) {
+        update_playlist();
+    });
+
+    return false;
+});
+
 function EOS() {
     // play next track in the playlist
     $.getJSON('/_next', { }, function (data) {
