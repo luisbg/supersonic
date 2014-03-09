@@ -1,33 +1,40 @@
 // * { border: 1px dashed #ff0000; }
 
-body            	{ font-family: sans-serif;
+html                { height: 100%; }
+body                { font-family: sans-serif;
                       background: #333;
                       display: block;
                       margin-top:0px;
                       margin-left: 0px;
-                      margin-right: 0px; }
-header              { background-color: #151b1f;
+                      margin-right: 0px;
+                      height: 100%; }
+a                   { color: #dddddd;
+                      text-decoration: none }
+h1, h2              { color: #377ba8;
+                      font-family: 'Georgia', serif;
+                      margin: 0; }
+h2                  { font-size: 1.2em; }
+hr                  { border-color: #000000; }
+
+header              { color: #377ba8;
+                      background-color: #151b1f;
                       overflow: auto;
                       width: 98%;
+                      height: 6%;
                       padding: 1%;
                       border: 0px; }
-a, h1, h2       	{ color: #377ba8;
-                      text-decoration: none }
-h1, h2          	{ font-family: 'Georgia', serif;
-                      margin: 0; }
-h2              	{ font-size: 1.2em; }
-
-.entries        	{ list-style: none;
+header a            { color: #377ba8; }
+.entries            { list-style: none;
                       margin: 0;
                       padding: 0; }
-.entries li     	{ margin: 0.8em 1.2em; }
-.entries li h2  	{ margin-left: -1em; }
-.flash          	{ background: #cee5F5;
+.entries li         { margin: 0.8em 1.2em; }
+.entries li h2      { margin-left: -1em; }
+.flash              { background: #cee5F5;
                       padding: 0.5em;
                       border: 0px solid #aacbe2; }
-.error          	{ background: #f0d6d6;
+.error              { background: #f0d6d6;
                       padding: 0.5em; }
-.head-left         {  float: left;
+.head-left          { float: left;
                       height: auto;
                       width: 30%;
                       left: 0;
@@ -40,13 +47,19 @@ h2              	{ font-size: 1.2em; }
                       text-align: right; }
 .left-margin        { float: left;
                       width: 47%;
-                      background: #dddddd;
+                      height: 82.5%;
+                      color: #dddddd;
+                      background-color: #151b1f;
                       padding: 1%;
                       margin-left: 0.6%;
                       margin-top: 10px; }
-.right-margin		{ float: right;
+.right-margin	    { float: right;
+                      font-size: .9em;
+                      color: #dddddd;
                       width: 47%;
-                      background: #dddddd;
+                      height: 82.5%;
+                      background-color: #151b1f;
                       padding: 1%;
                       margin-right: 0.6%;
                       margin-top: 10px; }
+.right-margin a     { color: #377ba8; }

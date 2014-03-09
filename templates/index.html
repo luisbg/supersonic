@@ -6,8 +6,6 @@
   {% endfor %} -->
 
   <ul class=entries>
-    <h2>Library</h2>
-    <hr>
     <table id="music_library">
     {% for artist, art_id in artists.iteritems() %}
       <tr data-tt-id="{{ art_id }}">
@@ -38,12 +36,9 @@
           <source type="audio/mp3" src="" />
           <p>Your browser does not support the audio element.</p>
         </audio>
-
-        <p><a href="#" id="prev">prev</a> :: <a href="#" id="next">next</a>
-        </p>
+        <a href="#" id="prev"><</a> :: <a href="#" id="next">></a>
       </center>
 
-  <h2><a href="/playlist">Playlist</a></h2>
   <hr>
   <ul class=entries>
     <span id="playlist">
