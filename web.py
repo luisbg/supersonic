@@ -29,7 +29,7 @@ app.config.update(dict(
     DEBUG=True,
     SECRET_KEY='sup3r secr3t dev3lopment k3y',
     USERNAME='luisbg',
-    PASSWORD='le_password'
+    PASSWORD='le_mr_password'
 ))
 # app.config.from_envvar('SUPERSONIC_SETTINGS', silent=True)
 
@@ -100,9 +100,9 @@ def playlist():
     mu = ""
 
     for t in playlist:
-        mu  += '<li>[<a href="/play/' + str(t['track']) + '">Play</a> / ' + \
-               '<a href="#' + str(t['id']) + '" id="remove">Remove</a>] ' + \
-               t['artist'] + ': ' + t['title']
+        mu  += '<li>[<a href="#' + str(t['id']) + '" id="remove">-</a>] ' + \
+               '<a href="/play/' + str(t['track']) + '">' + t['artist'] + \
+               ': ' + t['title'] + '</a>'
 
     return jsonify(result=mu)
 
@@ -234,7 +234,7 @@ def login():
         else:
             session['logged_in'] = True
             flash('You were logged in')
-            return redirect(url_for('show_music'))
+            return redirect(url_for('music'))
     return render_template('login.html', error=error)
 
 
@@ -242,7 +242,7 @@ def login():
 def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
-    return redirect(url_for('show_music'))
+    return redirect(url_for('music'))
 
 
 @app.teardown_appcontext

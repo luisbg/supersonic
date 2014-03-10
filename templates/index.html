@@ -43,9 +43,8 @@
   <ul class=entries>
     <span id="playlist">
     {% for item in playlist %}
-    <li>[<a href="/play/{{ item.track }}">Play</a> /
-      <a href="#{{ item.id }}" id="remove">Remove</a>]
-      {{ item.artist }}: {{ item.title }}
+    <li>[<a href="#{{ item.id }}" id="remove">-</a>]
+      <a href="/play/{{ item.track }}">{{ item.artist }}: {{ item.title }}</a>
       {% else %}
     <li><em>Empty playlist</em>
       {% endfor %}
