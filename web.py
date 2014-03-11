@@ -101,22 +101,12 @@ def playlist():
     return jsonify(result=playlist)
 
 
-@app.route('/play/<idn>')
-def play(idn=0):
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    db = get_db()
-    cur = db.execute('SELECT * FROM Music ' +
-                     'WHERE Id = ?',
-                     (idn,))
-    track = cur.fetchall()[0]
-    url = app.lucien.play(track[1], track[5])
+@app.route('/_play/<pl_idn>')
+def play(pl_idn=0):
+    pl_idn = int(pl_idn)
+    app.active = pl_idn
 
-    cur = db.execute('SELECT * FROM Playlist')
-    playlist = cur.fetchall()
-
-    return render_template('play.html', track=track, url=url,
-                           playlist=playlist)
+    return jsonify(result=True)
 
 
 @app.route('/_add/<idn>')

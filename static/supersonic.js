@@ -59,6 +59,19 @@ $(document).on('click', 'a#remove', function() {
     return false;
 });
 
+$(document).on('click', 'a#play', function() {
+    var idn = $(this).attr("href").slice(1);
+    $.getJSON('/_play/' + idn, { }, function (data) {
+        if (data.result) {
+            get_active();
+            play();
+        }
+    });
+
+    return false;
+});
+
+
 function EOS() {
     // play next track in the playlist
     $.getJSON('/_next', { }, function (data) {
