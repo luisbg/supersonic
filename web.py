@@ -17,6 +17,9 @@ class SuperSonic(Flask):
         Flask.__init__(self, import_name)
         self.lucien = Lucien()
         self.active = 0
+        self.artists = {}
+        self.albums = {}
+        self.tracks = {}
 
 
 # Create app
@@ -68,27 +71,26 @@ def music():
     cur = db.execute('SELECT * FROM Music ORDER BY Artist')
     tracks_db = cur.fetchall()
 
-    artists = {}
-    albums = {}
-    tracks = {}
     n = 0
     for art in artist_db:
-        artists[art['artist']] = n
+        app.artists[art['artist']] = n
         n += 1
 
     for alb in albums_db:
-        albums[alb['album']] = (n, artists[alb['artist']])
+        app.albums[alb['album']] = (n, app.artists[alb['artist']],
+                                    alb['artist'], alb['album'])
         n += 1
 
     for trk in tracks_db:
-        tracks[trk['title']] = (n, albums[trk['album']], trk['Id'])
+        app.tracks[trk['title']] = (n, app.albums[trk['album']], trk['Id'])
         n += 1
 
     cur = db.execute('SELECT * FROM Playlist')
     playlist_db = cur.fetchall()
 
-    return render_template('index.html', artists=artists, albums=albums,
-                           tracks=tracks, playlist=playlist_db)
+    return render_template('index.html', artists=app.artists,
+                           albums=app.albums, tracks=app.tracks,
+                           playlist=playlist_db)
 
 
 @app.route('/_get_playlist')
@@ -109,18 +111,42 @@ def play(pl_idn=0):
     return jsonify(result=True)
 
 
-@app.route('/_add/<idn>')
-def add(idn=0):
-    db = get_db()
-    cur = db.execute('SELECT * FROM Music WHERE Id = ?', (idn,))
-    track = cur.fetchall()[0]
-    artist = track[1]
-    album = track[2]
-    title = track[3]
-    db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (idn, artist,
-                                                              title))
-    db.commit()
-    db.close()
+@app.route('/_add/<ref>')
+def add(ref=""):
+    parameters = ref.split("_")
+    if parameters[1] == "track":
+        idn = parameters[2]
+        db = get_db()
+        cur = db.execute('SELECT * FROM Music WHERE Id = ?', (idn,))
+        track = cur.fetchall()[0]
+        artist = track[1]
+        title = track[3]
+        db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (idn, artist,
+                                                                  title))
+        db.commit()
+        db.close()
+
+    if parameters[1] == "album":
+        idn = parameters[2]
+        alb = ("", "", "", "")
+        for i, alb in app.albums.iteritems():
+            if str(alb[0]) == idn:
+                break
+
+        db = get_db()
+        cur = db.execute('SELECT * FROM Music WHERE Artist = ? AND Album = ?',
+                         (alb[2], alb[3]))
+        tracks = cur.fetchall()
+
+        for t in tracks:
+            idn = t[0]
+            artist = t[1]
+            title = t[3]
+            db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (idn,
+                                                                      artist,
+                                                                      title))
+        db.commit()
+        db.close()
 
     return jsonify(result="success")
 

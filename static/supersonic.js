@@ -41,8 +41,8 @@ $(document).ready(function () {
     });
 
     $('a#add').bind('click', function(idn) {
-        var idn = $(this).attr("href").slice(1);
-        $.getJSON('/_add/' + idn, { }, function (data) {
+        var ref = $(this).attr("href");
+        $.getJSON('/_add/' + ref, { }, function (data) {
             update_playlist();
         });
 
