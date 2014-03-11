@@ -113,6 +113,7 @@ def play(pl_idn=0):
 
 @app.route('/_add/<ref>')
 def add(ref=""):
+    tracks_to_add = []    # (idn, artist, title)
     parameters = ref.split("_")
     if parameters[1] == "track":
         idn = parameters[2]
@@ -121,10 +122,7 @@ def add(ref=""):
         track = cur.fetchall()[0]
         artist = track[1]
         title = track[3]
-        db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (idn, artist,
-                                                                  title))
-        db.commit()
-        db.close()
+        tracks_to_add.append((idn, track[1], track[3]))
 
     if parameters[1] == "album":
         idn = parameters[2]
@@ -139,14 +137,13 @@ def add(ref=""):
         tracks = cur.fetchall()
 
         for t in tracks:
-            idn = t[0]
-            artist = t[1]
-            title = t[3]
-            db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (idn,
-                                                                      artist,
-                                                                      title))
-        db.commit()
-        db.close()
+            tracks_to_add.append((t[0], t[1], t[3]))
+
+    for t in tracks_to_add:
+        db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (t[0], t[1],
+                                                                  t[2]))
+    db.commit()
+    db.close()
 
     return jsonify(result="success")
 
