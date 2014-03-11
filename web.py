@@ -95,16 +95,10 @@ def music():
 def playlist():
     db = get_db()
     cur = db.execute('SELECT * FROM Playlist')
-    playlist = cur.fetchall()
+    playlist_db = cur.fetchall()
+    playlist = render_template ('playlist.html', playlist=playlist_db)
 
-    mu = ""
-
-    for t in playlist:
-        mu  += '<li>[<a href="#' + str(t['id']) + '" id="remove">-</a>] ' + \
-               '<a href="/play/' + str(t['track']) + '">' + t['artist'] + \
-               ': ' + t['title'] + '</a>'
-
-    return jsonify(result=mu)
+    return jsonify(result=playlist)
 
 
 @app.route('/album/<artist>/<album>')

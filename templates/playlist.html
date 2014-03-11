@@ -1,0 +1,8 @@
+{% block playlist %}
+  {%- for item in playlist %}
+    <li>[<a href="#{{ item.id }}" id="remove">-</a>]
+      <a href="/play/{{ item.track }}">{{ item.artist }}: {{ item.title }}</a>
+      {%- else %}
+    <li><em>Empty playlist</em>
+  {% endfor %}
+{% endblock %}
