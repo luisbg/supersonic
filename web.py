@@ -85,10 +85,10 @@ def music():
         n += 1
 
     cur = db.execute('SELECT * FROM Playlist')
-    playlist = cur.fetchall()
+    playlist_db = cur.fetchall()
 
     return render_template('index.html', artists=artists, albums=albums,
-                           tracks=tracks, playlist=playlist)
+                           tracks=tracks, playlist=playlist_db)
 
 
 @app.route('/_get_playlist')
@@ -138,13 +138,13 @@ def remove(idn=0):
 def next():
     db = get_db()
     cur = db.execute('SELECT * FROM Playlist')
-    playlist = cur.fetchall()
+    playlist_db = cur.fetchall()
 
     change = False
-    if len(playlist) == 0:
+    if len(playlist_db) == 0:
         return jsonify(result=change)
 
-    if app.active < (len(playlist) - 1):
+    if app.active < (len(playlist_db) - 1):
         app.active += 1
         change = True
 
@@ -155,10 +155,10 @@ def next():
 def prev():
     db = get_db()
     cur = db.execute('SELECT * FROM Playlist')
-    playlist = cur.fetchall()
+    playlist_db = cur.fetchall()
 
     change = False
-    if len(playlist) == 0:
+    if len(playlist_db) == 0:
         return jsonify(result=change)
 
     if app.active > 0:
@@ -172,12 +172,12 @@ def prev():
 def get_active():
     db = get_db()
     cur = db.execute('SELECT * FROM Playlist')
-    playlist = cur.fetchall()
-    if len(playlist) == 0:
+    playlist_db = cur.fetchall()
+    if len(playlist_db) == 0:
         return jsonify(result=())
 
     cur = db.execute('SELECT * FROM Music WHERE Id = ?',
-                     (playlist[app.active][1],))
+                     (playlist_db[app.active][1],))
     track = cur.fetchall()[0]
 
     artist = track[1]
