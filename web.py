@@ -58,7 +58,7 @@ def music():
     # TODO: Optimize
     db = get_db()
     cur = db.execute('SELECT DISTINCT Artist ' +
-                      'FROM Music ORDER BY Artist')
+                     'FROM Music ORDER BY Artist')
     artist_db = cur.fetchall()
 
     cur = db.execute('SELECT DISTINCT Artist, Album ' +
@@ -77,8 +77,8 @@ def music():
         n += 1
 
     for alb in albums_db:
-         albums[alb['album']] = (n, artists[alb['artist']])
-         n += 1
+        albums[alb['album']] = (n, artists[alb['artist']])
+        n += 1
 
     for trk in tracks_db:
         tracks[trk['title']] = (n, albums[trk['album']], trk['Id'])
@@ -96,27 +96,9 @@ def playlist():
     db = get_db()
     cur = db.execute('SELECT * FROM Playlist')
     playlist_db = cur.fetchall()
-    playlist = render_template ('playlist.html', playlist=playlist_db)
+    playlist = render_template('playlist.html', playlist=playlist_db)
 
     return jsonify(result=playlist)
-
-
-@app.route('/album/<artist>/<album>')
-def show_album(artist="", album=""):
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    db = get_db()
-    cur = db.execute('SELECT * FROM Music ' +
-                     'WHERE Artist = ? AND Album = ?' +
-                     'ORDER BY Track',
-                     (artist, album))
-    entries = cur.fetchall()
-
-    cur = db.execute('SELECT * FROM Playlist')
-    playlist = cur.fetchall()
-
-    return render_template('show_album.html', entries=entries, artist=artist,
-                           album=album, playlist=playlist)
 
 
 @app.route('/play/<idn>')
@@ -177,6 +159,7 @@ def next():
         change = True
 
     return jsonify(result=change)
+
 
 @app.route('/_prev')
 def prev():
