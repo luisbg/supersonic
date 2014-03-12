@@ -261,10 +261,8 @@ class Lucien(GObject.GObject):
         self.conn.put_object(artist, obj_name, contents, headers=headers)
         contents.close()
 
-        file_uri = "%s/%s" % (album, title)
-        self.sqlcur.execute("INSERT INTO Music VALUES(NULL, " +
-                            "?, ?, ?, ?, ?)",
-                            (artist, album, title, track_num, file_uri))
+        self.add_track_to_db(artist, album, title, track_num)
+
         if alone:
             self.sqlconn.commit()
             db_file = open(self.dbo, "r")
