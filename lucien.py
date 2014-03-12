@@ -157,7 +157,7 @@ class Lucien(GObject.GObject):
             artist_id = artist_db[0][0]
         else:
             cur = self.sqlcur.execute('INSERT INTO Artists VALUES(NULL, ?)',
-                                (artist,))
+                                      (artist,))
             artist_id = cur.lastrowid
 
         # If Album exists use it's ID, if not create and get ID
@@ -168,7 +168,7 @@ class Lucien(GObject.GObject):
             album_id = album_db[0][0]
         else:
             cur = self.sqlcur.execute('INSERT INTO Albums VALUES(NULL, ?, ?)',
-                                (album, artist_id))
+                                      (album, artist_id))
             album_id = cur.lastrowid
 
         uri = "%s/%s" % (album, title)
@@ -179,11 +179,12 @@ class Lucien(GObject.GObject):
         self.sqlcur.execute('SELECT * from Tracks ORDER BY Album, Track')
         music = self.sqlcur.fetchall()
         for t in music:
-            t_id, artist, album, title, track, uri = self.track_complete_data(t)
+            tid, artist, album, title, track, uri = self.track_complete_data(t)
             self.discovered(artist, album, title, track)
 
             if not silent:
-                print "%s : %s / %s / (%s) %s" % (t_id, artist, album, track, title)
+                print "%s : %s / %s / (%s) %s" % (tid, artist, album, track,
+                                                  title)
 
     def track_complete_data(self, track_row):
         t_id = track_row[0]
