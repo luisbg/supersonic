@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from swiftclient import client
+from swift import Swift
 import config
 
 from optparse import OptionParser
@@ -13,7 +13,6 @@ import os
 import sqlite3
 
 from gi.repository import GObject
-from gi.repository import Gst, GstPbutils
 
 
 def encode_utf8(value):
@@ -34,7 +33,7 @@ def quote(value, safe='/'):
 
 
 class Lucien(GObject.GObject):
-    '''Lucien class. Encapsulates all the Swift work in
+    '''Lucien class. Encapsulates all the Database work in
        simple function per feature for the player'''
 
     __gsignals__ = {
@@ -46,39 +45,19 @@ class Lucien(GObject.GObject):
 
     def __init__(self, command=None):
         GObject.GObject.__init__(self)
-        Gst.init(None)  # Move somewhere more particular
         config.read_config_file()
         self.music_list = []
 
-        self.url = config.prefs['url']
-        self.authurl = config.prefs['url'] + config.prefs['authurl']
-        self.user = config.prefs['user']
-        self.key = config.prefs['key']
-        self.temp_url_key = config.prefs['temp_url_key']
+        self.swift = Swift()
+
         self.dbc = config.prefs['dbc']      # database container
         self.dbo = config.prefs['dbo']   # database object
 
-        self.conn = client.Connection(
-            authurl=self.authurl,
-            user=self.user,
-            key=self.key,
-            retries=5,
-            auth_version='1.0')
-        print "Connection successful to the account: ", self.conn.user
-
         if command != "generate-new-db":
-            found = False
-            for cts in self.conn.get_account()[1]:
-                if cts['name'] == self.dbc:
-                    found = True
-            if not found:
+            if not self.swift.container_exists(self.dbc):
                 exit("There should be a container called '%s'" % self.dbc)
-            try:
-                head = self.conn.head_object(self.dbc, self.dbo)
-            except:
-                print "Database not found"
 
-            head, contents = self.conn.get_object(self.dbc, self.dbo)
+            head, contents = self.swift.get_db_file(self.dbc, self.dbo)
             db = open(self.dbo, "w")
             db.write(contents)
             db.close()
@@ -122,7 +101,7 @@ class Lucien(GObject.GObject):
         self.populate_db()
 
         db_file = open(self.dbo, "r")
-        self.conn.put_object(self.dbc, self.dbo, db_file)
+        self.swift.update_database_file(self.dbc, self.dbo, db_file)
         db_file.close()
 
     def populate_db(self, silent=False):
@@ -130,23 +109,14 @@ class Lucien(GObject.GObject):
             print "Music list: \n"
             n = 0
 
-        for container in self.conn.get_account()[1]:
-            cont_name = container['name']
-            if cont_name != self.dbc:
-                items = self.conn.get_container(cont_name)[1]
-                for obj in items:
-                    head = self.conn.head_object(cont_name, obj['name'])
-                    artist = unicode(head['x-object-meta-artist'], "UTF-8")
-                    album = unicode(head['x-object-meta-album'], "UTF-8")
-                    title = unicode(head['x-object-meta-title'], "UTF-8")
-                    track_num = int(head['x-object-meta-track-num'])
-                    self.add_track_to_db(artist, album, title, track_num)
+        for t in self.swift.track_list(self.dbc):
+            artist, album, title, track_num = t
+            self.add_track_to_db(artist, album, title, track_num)
 
-                    if not silent:
-                        print str(n) + ": " + cont_name + " - " + \
-                            obj.get('name')
-                        n += 1
-                self.sqlconn.commit()
+            if not silent:
+                print str(n) + ":  " + artist + " / " + album + " / " + title
+                n += 1
+        self.sqlconn.commit()
 
     def add_track_to_db(self, artist, album, title, track_num):
         # If Artist exists use it's ID, if not create and get ID
@@ -213,9 +183,10 @@ class Lucien(GObject.GObject):
         expires = int(time() + duration_in_seconds)
         path = '/v1/AUTH_test/%s/%s' % (artist, obj_name)
         hmac_body = '%s\n%s\n%s' % (method, expires, path)
-        sig = hmac.new(self.temp_url_key, hmac_body, sha1).hexdigest()
+        sig = hmac.new(self.swift.temp_url_key, hmac_body, sha1).hexdigest()
         s = '{host}{path}?temp_url_sig={sig}&temp_url_expires={expires}'
-        url = s.format(host=self.url, path=path, sig=sig, expires=expires)
+        url = s.format(host=self.swift.url, path=path, sig=sig,
+                       expires=expires)
 
         return url
 
@@ -229,45 +200,13 @@ class Lucien(GObject.GObject):
     def add_file(self, filepath, alone=True):
         print "Adding file: " + filepath
 
-        contents = open(filepath, "r")
-
-        disc = GstPbutils.Discoverer.new(50000000000)
-        file_uri = Gst.filename_to_uri(filepath)
-        info = disc.discover_uri(file_uri)
-        tags = info.get_tags()
-        artist = album = title = "Unknown"
-        track_num = 0
-        tagged, tag = tags.get_string('artist')
-        if tagged:
-            artist = unicode(tag, "UTF-8")
-        tagged, tag = tags.get_string('album')
-        if tagged:
-            album = unicode(tag, "UTF-8")
-        tagged, tag = tags.get_string('title')
-        if tagged:
-            title = unicode(tag, "UTF-8")
-        tagged, tag = tags.get_uint('track-number')
-        if tagged:
-            track_num = tag
-
-        headers = []
-        headers.append(["X-Object-Meta-Artist", artist])
-        headers.append(["X-Object-Meta-Album", album])
-        headers.append(["X-Object-Meta-Title", title])
-        headers.append(["X-Object-Meta-Track-Num", str(track_num)])
-
-        obj_name = "%s/%s" % (album, title)
-        if not self.container_exists(artist):
-            self.conn.put_container(artist)
-        self.conn.put_object(artist, obj_name, contents, headers=headers)
-        contents.close()
-
+        artist, album, title, track_num = self.swift.add_music_file(filepath)
         self.add_track_to_db(artist, album, title, track_num)
 
         if alone:
             self.sqlconn.commit()
             db_file = open(self.dbo, "r")
-            self.conn.put_object(self.dbc, self.dbo, db_file)
+            self.swift.update_database_file(self.dbc, self.dbo, db_file)
             db_file.close()
 
         print "Added"
@@ -288,17 +227,8 @@ class Lucien(GObject.GObject):
 
         self.sqlconn.commit()
         db_file = open(self.dbo, "r")
-        self.conn.put_object(self.dbc, self.dbo, db_file)
+        self.swift.update_database_file(self.dbc, self.dbo, db_file)
         db_file.close()
-
-    def container_exists(self, container):
-        found = False
-        for c in self.conn.get_account()[1]:
-            if c['name'] == container:
-                found = True
-                break
-
-        return found
 
     def scan_folder_for_ext(self, folder, ext):
         scan = []
