@@ -176,13 +176,32 @@ class Lucien(GObject.GObject):
                             (title, track_num, uri, album_id))
 
     def collect_db(self, silent=True):
-        self.sqlcur.execute('SELECT * from Music')
+        self.sqlcur.execute('SELECT * from Tracks ORDER BY Album, Track')
         music = self.sqlcur.fetchall()
         for t in music:
-            self.discovered(t)
+            t_id, artist, album, title, track, uri = self.track_complete_data(t)
+            self.discovered(artist, album, title, track)
 
             if not silent:
-                print "%s : %s / %s / (%s) %s" % (t[0], t[1], t[2], t[4], t[3])
+                print "%s : %s / %s / (%s) %s" % (t_id, artist, album, track, title)
+
+    def track_complete_data(self, track_row):
+        t_id = track_row[0]
+        title = track_row[1]
+        track_num = track_row[2]
+        uri = track_row[3]
+        album_id = track_row[4]
+        self.sqlcur.execute('SELECT * FROM Albums WHERE Id = ?',
+                            (album_id,))
+        album_row = self.sqlcur.fetchall()[0]
+        album = album_row[1]
+        artist_id = album_row[2]
+        self.sqlcur.execute('SELECT * FROM Artists WHERE Id = ?',
+                            (artist_id,))
+        artist_row = self.sqlcur.fetchall()[0]
+        artist = artist_row[1]
+
+        return t_id, artist, album, title, track_num, uri
 
     def play(self, artist, obj_name):
         print "play: %s - %s" % (artist, obj_name)
@@ -291,15 +310,9 @@ class Lucien(GObject.GObject):
 
         return scan
 
-    def discovered(self, track):
-        obj_name = "%s/%s" % (track[2], track[3])
-        artist = track[1]
-        album = track[2]
-        title = track[3]
-        track_num = track[4]
-
+    def discovered(self, artist, album, title, track_num):
+        obj_name = "%s/%s" % (album, title)
         self.music_list.append(obj_name)
-
         self.emit("discovered", obj_name, artist, album, title, track_num)
 
     def search_in_any(self, query):
