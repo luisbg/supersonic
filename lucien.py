@@ -316,19 +316,53 @@ class Lucien(GObject.GObject):
 
     def search_in_any(self, query):
         query = "%" + query + "%"
-        result = []
-        self.sqlcur.execute('SELECT * from Music WHERE Artist LIKE ?',
+        result = []   # track_info = (id, artist, album, title, track_num, uri)
+        self.sqlcur.execute('SELECT * FROM Artists WHERE Name LIKE ?',
                             (query,))
-        for t in self.sqlcur.fetchall():
-            result.append(t)
+        for artist in self.sqlcur.fetchall():
+            artist_name = artist[1]
 
-        self.sqlcur.execute('SELECT * from Music WHERE Album LIKE ?', (query,))
-        for t in self.sqlcur.fetchall():
-            result.append(t)
+            self.sqlcur.execute('SELECT * FROM Albums WHERE Artist = ?',
+                                (artist[0],))
+            for album in self.sqlcur.fetchall():
+                album_name = album[1]
 
-        self.sqlcur.execute('SELECT * from Music WHERE Title LIKE ?', (query,))
-        for t in self.sqlcur.fetchall():
-            result.append(t)
+                self.sqlcur.execute('SELECT * FROM Tracks WHERE Album = ?',
+                                    (album[0],))
+                for track in self.sqlcur.fetchall():
+                    track_info = (track[0], artist_name, album_name, track[1],
+                                  track[2], track[3])
+                    result.append(track_info)
+
+        self.sqlcur.execute('SELECT * FROM Albums WHERE Name LIKE ?', (query,))
+        for album in self.sqlcur.fetchall():
+            self.sqlcur.execute('SELECT * FROM Artists WHERE Id = ?',
+                                (album[2],))
+            artist_name = self.sqlcur.fetchall()[0][1]
+            album_name = album[1]
+
+            self.sqlcur.execute('SELECT * FROM Tracks WHERE Album = ?',
+                                (album[0],))
+            for track in self.sqlcur.fetchall():
+                track_info = (track[0], artist_name, album_name, track[1],
+                              track[2], track[3])
+                result.append(track_info)
+
+        self.sqlcur.execute('SELECT * FROM Tracks WHERE Title LIKE ?',
+                            (query,))
+        for track in self.sqlcur.fetchall():
+            self.sqlcur.execute('SELECT * FROM Albums WHERE Id = ?',
+                                (track[4],))
+            album = self.sqlcur.fetchall()[0]
+            album_name = album[1]
+
+            self.sqlcur.execute('SELECT * FROM Artists WHERE Id = ?',
+                                (album[2],))
+            artist_name = self.sqlcur.fetchall()[0][1]
+
+            track_info = (track[0], artist_name, album_name, track[1],
+                          track[2], track[3])
+            result.append(track_info)
 
         return result
 
