@@ -18,7 +18,7 @@ import os
 import sys
 
 
-class SuperSonic():
+class GtkUI():
     def __init__(self):
         self.engine = Engine()
         self.lucien = Lucien()
@@ -31,7 +31,7 @@ class SuperSonic():
         self.library = {}
 
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(path.join(path.curdir, "gtk.ui"))
+        self.builder.add_from_file(path.join(path.curdir, "templates/gtk.ui"))
         self.builder.connect_signals(self)
 
         # Sup dawg, I heard you like black,
@@ -511,7 +511,7 @@ def run():
         if os.path.isfile(sample_cfg_path):
             config.write_config_file(sample_cfg_path)
 
-    ss = SuperSonic()
+    ui = GtkUI()
     Gtk.main()
 
 
