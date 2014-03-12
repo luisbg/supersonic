@@ -219,10 +219,11 @@ class Lucien(GObject.GObject):
         return url
 
     def play_cmd(self, track_num):
-        self.sqlcur.execute('SELECT * from Music WHERE Id = %s' % track_num)
+        self.sqlcur.execute('SELECT * from Tracks WHERE Id = %s' % track_num)
         track = self.sqlcur.fetchall()[0]
-        obj_name = "%s/%s" % (track[2], track[3])
-        print self.play(track[1], obj_name)
+        t_id, artist, album, title, x, y = self.track_complete_data(track)
+        obj_name = "%s/%s" % (album, title)
+        print self.play(artist, obj_name)
 
     def add_file(self, filepath, alone=True):
         print "Adding file: " + filepath
