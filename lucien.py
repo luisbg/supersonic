@@ -93,16 +93,30 @@ class Lucien(GObject.GObject):
 
     def generate_db(self):
         print "Generating database"
-        self.sqlcur.execute("DROP TABLE IF EXISTS Music")
+        self.sqlcur.execute("DROP TABLE IF EXISTS Artists")
+        self.sqlcur.execute("DROP TABLE IF EXISTS Albums")
+        self.sqlcur.execute("DROP TABLE IF EXISTS Tracks")
         self.sqlcur.execute("DROP TABLE IF EXISTS Playlist")
-        self.sqlcur.execute("CREATE TABLE Music" +
+        self.sqlcur.execute("CREATE TABLE Artists " +
                             "(Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            "Artist TEXT, Album TEXT, Title TEXT, " +
-                            "Track INT, Uri TEXT)")
-        self.sqlcur.execute("CREATE TABLE Playlist" +
+                            "Name TEXT)")
+        self.sqlcur.execute("CREATE TABLE Albums " +
+                            "(Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "Name TEXT, Artist INT, " +
+                            "FOREIGN KEY (Artist) REFERENCES Artists (Id))")
+        self.sqlcur.execute("CREATE TABLE Tracks " +
+                            "(Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "Title TEXT, Track INT, Uri TEXT, " +
+                            "Album INT, " +
+                            "FOREIGN KEY (Album) REFERENCES Albums (Id))")
+        self.sqlcur.execute("CREATE INDEX ArtistIndex " +
+                            "ON Albums (Artist)")
+        self.sqlcur.execute("CREATE INDEX AlbumIndex " +
+                            "ON Tracks (Album)")
+        self.sqlcur.execute("CREATE TABLE Playlist " +
                             "(Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                             "Track INT, Artist TEXT, Title TEXT, " +
-                            "FOREIGN KEY (Track) REFERENCES Music (Id))")
+                            "FOREIGN KEY (Track) REFERENCES Tracks (Id))")
         self.sqlconn.commit()
 
         self.populate_db()
@@ -126,18 +140,40 @@ class Lucien(GObject.GObject):
                     album = unicode(head['x-object-meta-album'], "UTF-8")
                     title = unicode(head['x-object-meta-title'], "UTF-8")
                     track_num = int(head['x-object-meta-track-num'])
-                    file_uri = "%s/%s" % (album, title)
-
-                    self.sqlcur.execute("INSERT INTO Music VALUES(NULL, " +
-                                        "?, ?, ?, ?, ?)",
-                                        (artist, album, title, track_num,
-                                         file_uri))
+                    self.add_track_to_db(artist, album, title, track_num)
 
                     if not silent:
                         print str(n) + ": " + cont_name + " - " + \
                             obj.get('name')
                         n += 1
                 self.sqlconn.commit()
+
+    def add_track_to_db(self, artist, album, title, track_num):
+        # If Artist exists use it's ID, if not create and get ID
+        self.sqlcur.execute('SELECT * FROM Artists WHERE Name = ?',
+                            (artist,))
+        artist_db = self.sqlcur.fetchall()
+        if artist_db:
+            artist_id = artist_db[0][0]
+        else:
+            cur = self.sqlcur.execute('INSERT INTO Artists VALUES(NULL, ?)',
+                                (artist,))
+            artist_id = cur.lastrowid
+
+        # If Album exists use it's ID, if not create and get ID
+        self.sqlcur.execute('SELECT * FROM Albums WHERE Name = ? AND ' +
+                            'Artist = ?', (album, artist_id))
+        album_db = self.sqlcur.fetchall()
+        if album_db:
+            album_id = album_db[0][0]
+        else:
+            cur = self.sqlcur.execute('INSERT INTO Albums VALUES(NULL, ?, ?)',
+                                (album, artist_id))
+            album_id = cur.lastrowid
+
+        uri = "%s/%s" % (album, title)
+        self.sqlcur.execute('INSERT INTO Tracks VALUES(NULL, ?, ?, ?, ?)',
+                            (title, track_num, uri, album_id))
 
     def collect_db(self, silent=True):
         self.sqlcur.execute('SELECT * from Music')
