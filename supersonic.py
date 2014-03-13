@@ -30,12 +30,15 @@ Positional arguments:
         exit()
 
     command = args[0]
-    lcn = Lucien(command=command)
 
     if command == "web":
         web.run()
+        exit()
     if command == "gtk":
         gtk.run()
+        exit()
+
+    lcn = Lucien(command=command)
 
     if command == "list":
         lcn.collect_db(silent=False)

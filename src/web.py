@@ -17,14 +17,13 @@ class SuperSonic(Flask):
         Flask.__init__(self, import_name)
         self.lucien = Lucien()
         self.active = 0
-        self.artists = {}
-        self.albums = {}
-        self.tracks = {}
+        self.music = {}
 
 
 # Create app
 app = SuperSonic(__name__)
 app.config.from_object(__name__)
+app.root_path = os.path.dirname(app.root_path)
 
 # Load default config and override config from an environment variable
 app.config.update(dict(
@@ -58,39 +57,43 @@ def music():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    # TODO: Optimize
     db = get_db()
-    cur = db.execute('SELECT DISTINCT Artist ' +
-                     'FROM Music ORDER BY Artist')
-    artist_db = cur.fetchall()
-
-    cur = db.execute('SELECT DISTINCT Artist, Album ' +
-                     'FROM Music ORDER BY Artist')
-    albums_db = cur.fetchall()
-
-    cur = db.execute('SELECT * FROM Music ORDER BY Artist')
-    tracks_db = cur.fetchall()
 
     n = 0
+    cur = db.execute('SELECT * FROM Artists ORDER BY Name')
+    artist_db = cur.fetchall()
     for art in artist_db:
-        app.artists[art['artist']] = n
+        artist_id = art[0]
+        artist_name = art[1]
+        app.music[n] = ("artist", artist_id, artist_name)
+        artist_index = n
         n += 1
 
-    for alb in albums_db:
-        app.albums[alb['album']] = (n, app.artists[alb['artist']],
-                                    alb['artist'], alb['album'])
-        n += 1
+        cur = db.execute('SELECT * FROM Albums WHERE Artist = ? ' +
+                         'ORDER By Name', (artist_id,))
+        albums_db = cur.fetchall()
+        for alb in albums_db:
+            album_id = alb[0]
+            album_name = alb[1]
+            app.music[n] = ("album", album_id, artist_index, album_name)
+            album_index = n
+            n += 1
 
-    for trk in tracks_db:
-        app.tracks[trk['title']] = (n, app.albums[trk['album']], trk['Id'])
-        n += 1
+            cur = db.execute('SELECT * FROM Tracks WHERE Album = ? ' +
+                             'ORDER BY Track', (album_id,))
+            tracks_db = cur.fetchall()
+            for trk in tracks_db:
+                trk_id = trk[0]
+                title = trk[1]
+                track_num = trk[2]
+                app.music[n] = ("track", trk_id, album_index, track_num,
+                                title)
+                n += 1
 
     cur = db.execute('SELECT * FROM Playlist')
     playlist_db = cur.fetchall()
 
-    return render_template('index.html', artists=app.artists,
-                           albums=app.albums, tracks=app.tracks,
-                           playlist=playlist_db)
+    return render_template('index.html', music=app.music, playlist=playlist_db)
 
 
 @app.route('/_get_playlist')
@@ -117,27 +120,36 @@ def add(ref=""):
     parameters = ref.split("_")
     if parameters[1] == "track":
         idn = parameters[2]
+
         db = get_db()
-        cur = db.execute('SELECT * FROM Music WHERE Id = ?', (idn,))
+        cur = db.execute('SELECT * FROM Tracks WHERE Id = ?', (idn,))
         track = cur.fetchall()[0]
-        artist = track[1]
-        title = track[3]
-        tracks_to_add.append((idn, track[1], track[3]))
+        title = track[1]
+        album_id = track[4]
+
+        cur = db.execute('SELECT * FROM Albums WHERE Id = ?', (album_id,))
+        artist_id = cur.fetchall()[0][2]
+        cur = db.execute('SELECT * FROM Artists WHERE Id = ?', (artist_id,))
+        artist = cur.fetchall()[0][1]
+
+        tracks_to_add.append((idn, artist, title))
 
     if parameters[1] == "album":
         idn = parameters[2]
-        alb = ("", "", "", "")
-        for i, alb in app.albums.iteritems():
-            if str(alb[0]) == idn:
-                break
 
         db = get_db()
-        cur = db.execute('SELECT * FROM Music WHERE Artist = ? AND Album = ?',
-                         (alb[2], alb[3]))
-        tracks = cur.fetchall()
+        cur = db.execute('SELECT * FROM Albums WHERE Id = ?', (idn,))
+        artist_id = cur.fetchall()[0][2]
+        cur = db.execute('SELECT * FROM Artists WHERE Id = ?', (artist_id,))
+        artist = cur.fetchall()[0][1]
 
+        cur = db.execute('SELECT * FROM Tracks WHERE Album = ? ORDER BY Track',
+                         (idn,))
+        tracks = cur.fetchall()
         for t in tracks:
-            tracks_to_add.append((t[0], t[1], t[3]))
+            track_id = t[0]
+            title = t[1]
+            tracks_to_add.append((track_id, artist, title))
 
     for t in tracks_to_add:
         db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (t[0], t[1],
@@ -199,17 +211,24 @@ def get_active():
     if len(playlist_db) == 0:
         return jsonify(result=())
 
-    cur = db.execute('SELECT * FROM Music WHERE Id = ?',
+    cur = db.execute('SELECT * FROM Tracks WHERE Id = ?',
                      (playlist_db[app.active][1],))
     track = cur.fetchall()[0]
+    track_title = track[1]
 
-    artist = track[1]
-    album = track[2]
-    title = track[3]
+    cur = db.execute('SELECT * FROM Albums WHERE Id = ?',
+                     (track[4],))
+    album = cur.fetchall()[0]
+    album_name = album[1]
 
-    url = app.lucien.play(track[1], track[5])
+    cur = db.execute('SELECT * FROM Artists WHERE Id = ?',
+                     (album[2],))
+    artist_name = cur.fetchall()[0][1]
 
-    res = (artist, album, title, url)
+    obj_name = "%s/%s" % (album_name, track_title)
+    url = app.lucien.play(artist_name, obj_name)
+
+    res = (artist_name, album_name, track_title, url)
     return jsonify(result=res)
 
 
