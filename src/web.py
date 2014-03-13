@@ -116,6 +116,7 @@ def play(pl_idn=0):
 
 @app.route('/_add/<ref>')
 def add(ref=""):
+    # TODO: Move DB usage to lucien. Make recursive
     tracks_to_add = []    # (idn, artist, title)
     parameters = ref.split("_")
     if parameters[1] == "track":
@@ -150,6 +151,24 @@ def add(ref=""):
             track_id = t[0]
             title = t[1]
             tracks_to_add.append((track_id, artist, title))
+
+    if parameters[1] == "artist":
+        idn = parameters[2]
+
+        db = get_db()
+        cur = db.execute('SELECT * FROM Artists WHERE Id = ?', (idn,))
+        artist = cur.fetchall()[0][1]
+
+        cur = db.execute('SELECT * FROM Albums WHERE Artist = ?', (idn,))
+        albums = cur.fetchall()
+        for alb in albums:
+            cur = db.execute('SELECT * FROM Tracks WHERE Album = ? ' +
+                             'ORDER BY Track', (alb[0],))
+            tracks = cur.fetchall()
+            for t in tracks:
+                track_id = t[0]
+                title = t[1]
+                tracks_to_add.append((track_id, artist, title))
 
     for t in tracks_to_add:
         db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (t[0], t[1],

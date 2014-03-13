@@ -6,7 +6,7 @@
     {%- for item_id, item in music.iteritems() %}
       {%- if item[0] == "artist" %}
         <tr data-tt-id="{{ item_id }}">
-          <td>{{ item[2] }}</td>
+          <td><a href="_artist_{{ item[1] }}" id="add">{{ item[2] }}</a></td>
         </tr>
       {%- elif item[0] == "album" %}
         <tr data-tt-id="{{ item_id }}" data-tt-parent-id="{{ item[2] }}">
