@@ -5,6 +5,7 @@
 
 import sqlite3
 import os
+import random
 
 from flask import Flask, request, session, g, redirect, url_for, abort, \
     render_template, flash, jsonify
@@ -230,6 +231,23 @@ def clear():
 
     # We want next at EOS to be the first item if any is added to the Playlist
     app.active = -1
+
+    return jsonify(result="success")
+
+
+@app.route('/_shuffle')
+def shuffle():
+    db = get_db()
+    cur = db.execute('SELECT * FROM Playlist')
+    playlist_db = cur.fetchall()
+    db.execute('DELETE FROM Playlist')
+
+    random.shuffle(playlist_db)
+    for t in playlist_db:
+        db.execute('INSERT INTO Playlist VALUES(NULL, ?, ?, ?)', (t[1], t[2],
+                                                                  t[3]))
+    db.commit()
+    app.active = 0
 
     return jsonify(result="success")
 

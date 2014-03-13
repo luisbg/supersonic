@@ -59,6 +59,18 @@ $(document).ready(function () {
 
         return false;
     });
+
+    $('a#shuffle').bind('click', function(idn) {
+        var ref = $(this).attr("href");
+        $.getJSON('/_shuffle', function (data) {
+            if (data.result) {
+                update_playlist();
+                get_active();
+                }
+        });
+
+        return false;
+    });
 });
 
 $(document).on('click', 'a#remove', function() {
