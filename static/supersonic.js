@@ -48,6 +48,17 @@ $(document).ready(function () {
 
         return false;
     });
+
+    $('a#clear').bind('click', function(idn) {
+        var ref = $(this).attr("href");
+        $.getJSON('/_clear', function (data) {
+            if (data.result) {
+                update_playlist();
+                }
+        });
+
+        return false;
+    });
 });
 
 $(document).on('click', 'a#remove', function() {

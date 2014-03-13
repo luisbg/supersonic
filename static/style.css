@@ -45,6 +45,8 @@ header a            { color: #377ba8; }
                       left: 10px;
                       z-index: 200;
                       text-align: right; }
+.playlist-controls  { float: right;
+                      height: auto; }
 .left-margin        { float: left;
                       width: 47%;
                       height: 82.5%;

@@ -222,6 +222,18 @@ def prev():
     return jsonify(result=change)
 
 
+@app.route('/_clear')
+def clear():
+    db = get_db()
+    db.execute('DELETE FROM Playlist')
+    db.commit()
+
+    # We want next at EOS to be the first item if any is added to the Playlist
+    app.active = -1
+
+    return jsonify(result="success")
+
+
 @app.route('/_get_active')
 def get_active():
     db = get_db()
