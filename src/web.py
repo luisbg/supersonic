@@ -18,6 +18,7 @@ class SuperSonic(Flask):
         Flask.__init__(self, import_name)
         self.lucien = Lucien()
         self.active = 0
+        self.repeat_mode = 0    # (off, all, one)
         self.music = {}
 
 
@@ -195,13 +196,24 @@ def next():
     cur = db.execute('SELECT * FROM Playlist')
     playlist_db = cur.fetchall()
 
+    # if playlist empty just return without a change
     change = False
     if len(playlist_db) == 0:
         return jsonify(result=change)
 
-    if app.active < (len(playlist_db) - 1):
-        app.active += 1
-        change = True
+    # repeat one
+    if app.repeat_mode == 2:
+        change=True
+
+    else:
+        # if not at last go to next
+        if app.active < (len(playlist_db) - 1):
+            app.active += 1
+            change = True
+        # if at last item and repeating all go to first
+        elif app.repeat_mode == 1:
+            app.active = 0
+            change=True
 
     return jsonify(result=change)
 
@@ -250,6 +262,17 @@ def shuffle():
     app.active = 0
 
     return jsonify(result="success")
+
+
+@app.route('/_repeat/<g>')
+def repeat(g="1"):
+    if g == "0":
+        if app.repeat_mode < 2:
+            app.repeat_mode += 1
+        else:
+            app.repeat_mode = 0
+
+    return jsonify(result=app.repeat_mode)
 
 
 @app.route('/_get_active')

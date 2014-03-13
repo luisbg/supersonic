@@ -17,6 +17,7 @@ $(document).ready(function () {
     });
 
     $("#music_library").treetable({ expandable: true });
+    update_repeat_mode(1);
 
     $('a#next').bind('click', function() {
         $.getJSON('/_next', { }, function (data) {
@@ -49,8 +50,7 @@ $(document).ready(function () {
         return false;
     });
 
-    $('a#clear').bind('click', function(idn) {
-        var ref = $(this).attr("href");
+    $('a#clear').bind('click', function() {
         $.getJSON('/_clear', function (data) {
             if (data.result) {
                 update_playlist();
@@ -60,8 +60,7 @@ $(document).ready(function () {
         return false;
     });
 
-    $('a#shuffle').bind('click', function(idn) {
-        var ref = $(this).attr("href");
+    $('a#shuffle').bind('click', function() {
         $.getJSON('/_shuffle', function (data) {
             if (data.result) {
                 update_playlist();
@@ -69,6 +68,11 @@ $(document).ready(function () {
                 }
         });
 
+        return false;
+    });
+
+    $('a#repeat').bind('click', function(s) {
+        update_repeat_mode(0);
         return false;
     });
 });
@@ -125,5 +129,28 @@ function update_playlist() {
               function(data) {
                   $("#playlist").text("");
                   $("#playlist").append(data.result);
+              });
+}
+
+function update_repeat_mode(get) {
+    $.getJSON('/_repeat/' + get, { },
+              function (data) {
+                  var mode_text = "";
+                  switch (data.result)
+                  {
+                  case 0:
+                      mode_text = "Repeat Off";
+                      break;
+                  case 1:
+                      mode_text = "Repeat All";
+                      break;
+                  case 2:
+                      mode_text = "Repeat One";
+                      break;
+                  default:
+                      break;
+                  }
+
+                  $('a#repeat').text(mode_text);
               });
 }
