@@ -5,7 +5,7 @@ html                { height: 100%;
                       border: 0px;
                       padding: 0px; }
 body                { font-family: sans-serif;
-                      background: #333;
+                      background: #222222;
                       display: block;
                       margin: 0px;
                       padding: 0px;
@@ -21,6 +21,9 @@ h2                  { font-size: 1.2em; }
 hr                  { border-color: #000000; }
 header              { color: #377ba8;
                       background-color: #151b1f;
+                      -webkit-box-shadow: 0px 2px 6px #000000;
+                      -moz-box-shadow:    0px 2px 6px #000000;
+                      box-shadow:         0px 2px 6px #000000;
                       width: 98%;
                       height: 6%;
                       overflow: auto;
@@ -36,6 +39,7 @@ header a            { color: #377ba8; }
                       height: auto;
                       width: 30%;
                       left: 0px; }
+.head-left a        { color: #859900; }
 .head-right         { float: right;
                       height: auto;
                       width: 20%;
@@ -45,9 +49,12 @@ header a            { color: #377ba8; }
                       margin: 0px;
                       padding: 0px;
                       overflow: auto; }
-#playlist           { margin-top: 35px;
+#playlist           { position: absolute;
                       list-style: none;
-                      height: 80%;
+                      top: 125px;
+                      bottom: 5px;
+                      right: 10px;
+                      left: 10px;
                       overflow: auto; }
 #playlist li        { margin: 0.4em 1.2em; }
 .music li           { margin: 0.8em 1.2em; }
@@ -66,9 +73,27 @@ header a            { color: #377ba8; }
                       color: #dddddd;
                       width: 48%;
                       height: 88%;
+                      position: relative;
                       display: block;
                       background-color: #151b1f;
                       padding: 0.5%;
                       margin-right: 0.6%;
                       margin-top: 10px; }
 .right-margin a     { color: #377ba8; }
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #101417;
+    border: 0px;
+    border-radius: 6px;
+}
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    background: #35454f;
+}
+::-webkit-scrollbar-thumb:window-inactive {
+	background: #35454f;
+}
