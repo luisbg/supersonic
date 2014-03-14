@@ -7,7 +7,7 @@ $(document).ready(function () {
             get_active();
             play();
 
-            player.addEventListener('ended', function(){
+            player.addEventListener('ended', function() {
                 EOS();
             });
         },
@@ -41,9 +41,9 @@ $(document).ready(function () {
         return false;
     });
 
-    $('a#add').bind('click', function(idn) {
+    $('a#add').bind('click', function() {
         var ref = $(this).attr("href");
-        $.getJSON('/_add/' + ref, { }, function (data) {
+        $.getJSON('/_add/' + ref, { }, function () {
             update_playlist();
         });
 
@@ -54,7 +54,7 @@ $(document).ready(function () {
         $.getJSON('/_clear', function (data) {
             if (data.result) {
                 update_playlist();
-                }
+            }
         });
 
         return false;
@@ -65,13 +65,13 @@ $(document).ready(function () {
             if (data.result) {
                 update_playlist();
                 get_active();
-                }
+            }
         });
 
         return false;
     });
 
-    $('a#repeat').bind('click', function(s) {
+    $('a#repeat').bind('click', function() {
         update_repeat_mode(0);
         return false;
     });
@@ -79,7 +79,7 @@ $(document).ready(function () {
 
 $(document).on('click', 'a#remove', function() {
     var idn = $(this).attr("href").slice(1);
-    $.getJSON('/_remove/' + idn, { }, function (data) {
+    $.getJSON('/_remove/' + idn, { }, function () {
         update_playlist();
     });
 
