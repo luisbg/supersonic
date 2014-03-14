@@ -92,7 +92,7 @@ def music():
                                 title)
                 n += 1
 
-    cur = db.execute('SELECT * FROM Playlist')
+    cur = db.execute('SELECT * FROM Playlist ORDER BY Id')
     playlist_db = cur.fetchall()
 
     return render_template('index.html', music=app.music, playlist=playlist_db)
@@ -101,7 +101,7 @@ def music():
 @app.route('/_get_playlist')
 def playlist():
     db = get_db()
-    cur = db.execute('SELECT * FROM Playlist')
+    cur = db.execute('SELECT * FROM Playlist ORDER BY Id')
     playlist_db = cur.fetchall()
     playlist = render_template('playlist.html', playlist=playlist_db)
 
@@ -190,10 +190,57 @@ def remove(idn=0):
     return jsonify(result="success")
 
 
+@app.route('/_up/<idn>')
+def up(idn=0):
+    idn = int(idn)
+    if idn > 1:
+        db = get_db()
+        cur = db.execute('SELECT * FROM Playlist ORDER BY Id')
+        playlist_db = cur.fetchall()
+
+        # if playlist empty do nothing
+        if len(playlist_db) == 0:
+            return jsonify(result=change)
+
+        f = playlist_db[idn - 2]    # first
+        s = playlist_db[idn - 1]    # second (item to move up)
+        db.execute('UPDATE Playlist SET Track=?, ' +
+                   'Artist=?, Title=? WHERE Id = ?', (s[1], s[2],
+                                                      s[3], idn - 1))
+        db.execute('UPDATE Playlist SET Track=?, ' +
+                   'Artist=?, Title=? WHERE Id = ?', (f[1], f[2], f[3], idn))
+        db.commit()
+
+    return jsonify(result="success")
+
+
+@app.route('/_down/<idn>')
+def down(idn=0):
+    idn = int(idn)
+    db = get_db()
+    cur = db.execute('SELECT * FROM Playlist ORDER BY Id')
+    playlist_db = cur.fetchall()
+
+    if idn < (len(playlist_db) - 1):
+        # if playlist empty do nothing
+        if len(playlist_db) == 0:
+            return jsonify(result=change)
+
+        f = playlist_db[idn - 1]    # first (item to move down)
+        s = playlist_db[idn]    # second
+        db.execute('UPDATE Playlist SET Track=?, ' +
+                   'Artist=?, Title=? WHERE Id = ?', (s[1], s[2], s[3], idn))
+        db.execute('UPDATE Playlist SET Track=?, ' +
+                   'Artist=?, Title=? WHERE Id = ?', (f[1], f[2], f[3], idn+1))
+        db.commit()
+
+    return jsonify(result="success")
+
+
 @app.route('/_next')
 def next():
     db = get_db()
-    cur = db.execute('SELECT * FROM Playlist')
+    cur = db.execute('SELECT * FROM Playlist ORDER BY Id')
     playlist_db = cur.fetchall()
 
     # if playlist empty just return without a change
@@ -203,7 +250,7 @@ def next():
 
     # repeat one
     if app.repeat_mode == 2:
-        change=True
+        change = True
 
     else:
         # if not at last go to next
@@ -213,7 +260,7 @@ def next():
         # if at last item and repeating all go to first
         elif app.repeat_mode == 1:
             app.active = 0
-            change=True
+            change = True
 
     return jsonify(result=change)
 
@@ -221,7 +268,7 @@ def next():
 @app.route('/_prev')
 def prev():
     db = get_db()
-    cur = db.execute('SELECT * FROM Playlist')
+    cur = db.execute('SELECT * FROM Playlist ORDER BY Id')
     playlist_db = cur.fetchall()
 
     change = False
@@ -250,7 +297,7 @@ def clear():
 @app.route('/_shuffle')
 def shuffle():
     db = get_db()
-    cur = db.execute('SELECT * FROM Playlist')
+    cur = db.execute('SELECT * FROM Playlist ORDER BY Id')
     playlist_db = cur.fetchall()
     db.execute('DELETE FROM Playlist')
 
@@ -278,7 +325,7 @@ def repeat(g="1"):
 @app.route('/_get_active')
 def get_active():
     db = get_db()
-    cur = db.execute('SELECT * FROM Playlist')
+    cur = db.execute('SELECT * FROM Playlist ORDER BY Id')
     playlist_db = cur.fetchall()
     if len(playlist_db) == 0:
         return jsonify(result=())

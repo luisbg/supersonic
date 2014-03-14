@@ -77,6 +77,18 @@ $(document).ready(function () {
     });
 });
 
+$(document).on('click', 'a#play', function() {
+    var idn = $(this).attr("href").slice(1);
+    $.getJSON('/_play/' + idn, { }, function (data) {
+        if (data.result) {
+            get_active();
+            play();
+        }
+    });
+
+    return false;
+});
+
 $(document).on('click', 'a#remove', function() {
     var idn = $(this).attr("href").slice(1);
     $.getJSON('/_remove/' + idn, { }, function () {
@@ -86,13 +98,19 @@ $(document).on('click', 'a#remove', function() {
     return false;
 });
 
-$(document).on('click', 'a#play', function() {
+$(document).on('click', 'a#up', function() {
     var idn = $(this).attr("href").slice(1);
-    $.getJSON('/_play/' + idn, { }, function (data) {
-        if (data.result) {
-            get_active();
-            play();
-        }
+    $.getJSON('/_up/' + idn, { }, function () {
+        update_playlist();
+    });
+
+    return false;
+});
+
+$(document).on('click', 'a#down', function() {
+    var idn = $(this).attr("href").slice(1);
+    $.getJSON('/_down/' + idn, { }, function () {
+        update_playlist();
     });
 
     return false;
