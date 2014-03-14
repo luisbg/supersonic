@@ -14,6 +14,7 @@
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='jquery.treetable.css') }}" />
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='jquery.treetable.theme.css') }}" />
 </head>
+<body>
   <header>
     <div class="head-left">
       <h1><a href="/">Supersonic</a></h1>
@@ -27,6 +28,7 @@
       {% endif %}
     </div>
   </header>
-
 {% block body %}
 {% endblock %}
+</body>
+</html>

@@ -1,34 +1,32 @@
 // * { border: 1px dashed #ff0000; }
 
-html                { height: 100%; }
+html                { height: 100%;
+                      margin: 0px;
+                      border: 0px;
+                      padding: 0px; }
 body                { font-family: sans-serif;
                       background: #333;
                       display: block;
-                      margin-top:0px;
-                      margin-left: 0px;
-                      margin-right: 0px;
-                      height: 100%; }
+                      margin: 0px;
+                      padding: 0px;
+                      border: 0px;
+                      height: 98%;
+                      width: 100%; }
 a                   { color: #dddddd;
                       text-decoration: none }
 h1, h2              { color: #377ba8;
                       font-family: 'Georgia', serif;
-                      margin: 0; }
+                      margin: 0px; }
 h2                  { font-size: 1.2em; }
 hr                  { border-color: #000000; }
-
 header              { color: #377ba8;
                       background-color: #151b1f;
-                      overflow: auto;
                       width: 98%;
                       height: 6%;
+                      overflow: auto;
                       padding: 1%;
                       border: 0px; }
 header a            { color: #377ba8; }
-.entries            { list-style: none;
-                      margin: 0;
-                      padding: 0; }
-.entries li         { margin: 0.8em 1.2em; }
-.entries li h2      { margin-left: -1em; }
 .flash              { background: #cee5F5;
                       padding: 0.5em;
                       border: 0px solid #aacbe2; }
@@ -37,31 +35,40 @@ header a            { color: #377ba8; }
 .head-left          { float: left;
                       height: auto;
                       width: 30%;
-                      left: 0;
-                      z-index: 200; }
+                      left: 0px; }
 .head-right         { float: right;
                       height: auto;
                       width: 20%;
                       left: 10px;
-                      z-index: 200;
                       text-align: right; }
+.music              { height: 100%;
+                      margin: 0px;
+                      padding: 0px;
+                      overflow: auto; }
+#playlist           { margin-top: 35px;
+                      list-style: none;
+                      height: 80%;
+                      overflow: auto; }
+#playlist li        { margin: 0.4em 1.2em; }
+.music li           { margin: 0.8em 1.2em; }
 .playlist-controls  { float: right;
                       height: auto; }
 .left-margin        { float: left;
-                      width: 47%;
-                      height: 82.5%;
+                      width: 48%;
+                      height: 88%;
                       color: #dddddd;
                       background-color: #151b1f;
-                      padding: 1%;
+                      padding: 0.5%;
                       margin-left: 0.6%;
                       margin-top: 10px; }
 .right-margin	    { float: right;
                       font-size: .9em;
                       color: #dddddd;
-                      width: 47%;
-                      height: 82.5%;
+                      width: 48%;
+                      height: 88%;
+                      display: block;
                       background-color: #151b1f;
-                      padding: 1%;
+                      padding: 0.5%;
                       margin-right: 0.6%;
                       margin-top: 10px; }
 .right-margin a     { color: #377ba8; }

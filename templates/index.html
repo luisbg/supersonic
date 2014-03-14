@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="left-margin">
-  <ul class=entries>
+    <div class="music">
     <table id="music_library">
     {%- for item_id, item in music.iteritems() %}
       {%- if item[0] == "artist" %}
@@ -19,12 +19,12 @@
       {% endif %}
     {% endfor %}
     </table>
-  </ul>
+    </div>
 </div>
 
 <div class=right-margin>
     <div id="track"></div>
-    <p>
+    <p></p>
       <center>
         <span id="track_info"></span> <!-- track information -->
         <audio id="player" controls="controls">
@@ -36,13 +36,12 @@
       </center>
 
   <hr>
-  <ul class=entries>
-    <div class="playlist-controls"><a href="#" id="clear">Clear</a> |
-      <a href="#" id="shuffle">Shuffle</a> |
-      <a href="_1" id="repeat">Repeat Off</a></div>
-    <span id="playlist">
-      {% include 'playlist.html' %}
-    </span>
-  </ul>
+  <div class="playlist-controls"><a href="#" id="clear">Clear</a> |
+    <a href="#" id="shuffle">Shuffle</a> |
+    <a href="_1" id="repeat">Repeat Off</a>
+  </div>
+
+  {% include 'playlist.html' %}
+
 </div>
 {% endblock %}
