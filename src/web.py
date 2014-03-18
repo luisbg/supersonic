@@ -190,6 +190,11 @@ def remove(idn=0):
     return jsonify(result="success")
 
 
+@app.route('/_delete/<ref>')
+def delete(ref=""):
+    return jsonify(result="success")
+
+
 @app.route('/_up/<idn>')
 def up(idn=0):
     idn = int(idn)
@@ -371,6 +376,47 @@ def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
     return redirect(url_for('music'))
+
+
+@app.route('/admin')
+def admin():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    db = get_db()
+
+    n = 0
+    cur = db.execute('SELECT * FROM Artists ORDER BY Name')
+    artist_db = cur.fetchall()
+    for art in artist_db:
+        artist_id = art[0]
+        artist_name = art[1]
+        app.music[n] = ("artist", artist_id, artist_name)
+        artist_index = n
+        n += 1
+
+        cur = db.execute('SELECT * FROM Albums WHERE Artist = ? ' +
+                         'ORDER By Name', (artist_id,))
+        albums_db = cur.fetchall()
+        for alb in albums_db:
+            album_id = alb[0]
+            album_name = alb[1]
+            app.music[n] = ("album", album_id, artist_index, album_name)
+            album_index = n
+            n += 1
+
+            cur = db.execute('SELECT * FROM Tracks WHERE Album = ? ' +
+                             'ORDER BY Track', (album_id,))
+            tracks_db = cur.fetchall()
+            for trk in tracks_db:
+                trk_id = trk[0]
+                title = trk[1]
+                track_num = trk[2]
+                app.music[n] = ("track", trk_id, album_index, track_num,
+                                title)
+                n += 1
+
+    return render_template('admin.html', music=app.music, playlist=None)
 
 
 @app.teardown_appcontext

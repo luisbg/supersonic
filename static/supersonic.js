@@ -50,6 +50,14 @@ $(document).ready(function () {
         return false;
     });
 
+    $('a#delete').bind('click', function() {
+        var ref = $(this).attr("href");
+        $.getJSON('/_delete/' + ref, { }, function () {
+        });
+
+        return false;
+    });
+
     $('a#clear').bind('click', function() {
         $.getJSON('/_clear', function (data) {
             if (data.result) {

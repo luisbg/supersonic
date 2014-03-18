@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="left-margin">
+    <div class="music">
+    <p>Click to delete from library</p>
+    <hr>
+    <table id="music_library">
+    {%- for item_id, item in music.iteritems() %}
+      {%- if item[0] == "artist" %}
+        <tr data-tt-id="{{ item_id }}">
+          <td>{{ item[2] }} [<a href="_artist_{{ item[1] }}" id="delete">-</a>]</td>
+        </tr>
+      {%- elif item[0] == "album" %}
+        <tr data-tt-id="{{ item_id }}" data-tt-parent-id="{{ item[2] }}">
+          <td>{{ item[3] }} [<a href="_album_{{ item[1] }}" id="delete">-</a>]</td>
+        </tr>
+      {%- elif item[0] == "track" %}
+        <tr data-tt-id="{{ item_id }}" data-tt-parent-id="{{ item[2] }}">
+          <td>{{ item[3]}}  {{ item[4] }} [<a href="_track_{{ item[1] }}" id="delete">-</a>]</td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+    </table>
+    </div>
+</div>
+
+<div class=right-margin>
+   <p>Add a file or folder</p>
+</div>
+{% endblock %}
